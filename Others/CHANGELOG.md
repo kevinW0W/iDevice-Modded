@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.2
+
+- Fixed the Pro Dynamic Island overlay so it stays aligned over the mirrored screen in both normal and floating views.
+- Added a three-state cutout control for the iPhone 12 notch, Pro Dynamic Island, or no cutout; the selection is remembered and available in floating controls.
+- Resized the Pro Dynamic Island to better match the proportions of the real cutout.
+
 ## 0.1.1
 
 - Start Menu and desktop shortcuts now launch the installed `iDesktop.bat`, which selects the correct private Python runtime. The PowerShell install and repository-root launcher use the same batch entry point.

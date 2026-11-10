@@ -50,7 +50,8 @@ try { for (const s of ['left','right']) if (!localStorage.getItem('tray-'+s)) lo
  body.ext-compact #ext-bezel canvas { display:block; position:absolute }
  #stage { align-items:center !important }
  #ext-notch { position:absolute; z-index:4; display:none; pointer-events:none; background:#000 }
- body.frame-on #device-frame #ext-notch, body.ext-compact #ext-bezel #ext-notch { display:block }
+ body.ext-notch-visible #device-frame #ext-notch,
+ body.ext-compact.ext-notch-visible #ext-bezel #ext-notch { display:block }
  #ext-notch.standard { border-radius:0 0 48% 48% / 0 0 30% 30% }
  #ext-notch.pro { border-radius:999px; box-shadow:0 1px 2px #0008 }
  body.ext-compact #ext-phone .hw { position:absolute !important; display:block !important; margin:0 !important;
@@ -586,13 +587,29 @@ BODY_INJECT = """
   const deviceFrame = document.getElementById('device-frame');
   const frameNotch = document.createElement('div'); frameNotch.id = 'ext-notch';
   deviceFrame.appendChild(frameNotch);
-  let proNotch = stored('ext-pro-notch') === '1', notchButton = null;
-  document.body.classList.toggle('ext-pro-notch', proNotch);
+  let notchMode = stored('ext-notch-mode');
+  if (!['standard', 'pro', 'off'].includes(notchMode))
+    notchMode = stored('ext-pro-notch') === '1' ? 'pro' : 'standard';
+  let notchButton = null;
+  const notchLabel = () => notchMode === 'pro' ? 'Pro Notch: on'
+    : notchMode === 'off' ? 'Notch: hidden' : 'Notch: iPhone 12';
+  const notchTip = () => 'Cycle the mirror cutout: iPhone 12 notch, Pro Dynamic Island, or hidden';
+  function updateNotchState() {
+    document.body.classList.toggle('ext-notch-visible', notchMode !== 'off');
+    document.body.classList.toggle('ext-pro-notch', notchMode === 'pro');
+    if (notchButton) {
+      notchButton.textContent = notchLabel();
+      notchButton.title = notchTip();
+      notchButton.setAttribute('aria-label', notchLabel());
+    }
+  }
+  updateNotchState();
   function positionNotch() {
     if (!canvas.offsetWidth || !canvas.offsetHeight) return;
-    const width = Math.round(canvas.offsetWidth * (proNotch ? 0.28 : 0.38));
+    const proNotch = notchMode === 'pro';
+    const width = Math.round(canvas.offsetWidth * (proNotch ? 0.32 : 0.38));
     const height = proNotch
-      ? Math.max(10, Math.round(canvas.offsetWidth * 0.045))
+      ? Math.max(14, Math.round(canvas.offsetWidth * 0.085))
       : Math.max(18, Math.round(canvas.offsetWidth * 0.078));
     const top = canvas.offsetTop + (proNotch ? Math.max(5, Math.round(canvas.offsetWidth * 0.018)) : 0);
     Object.assign(frameNotch.style, {
@@ -602,16 +619,13 @@ BODY_INJECT = """
       height: height + 'px',
     });
     frameNotch.classList.toggle('pro', proNotch);
-    frameNotch.classList.toggle('standard', !proNotch);
+    frameNotch.classList.toggle('standard', notchMode === 'standard');
   }
-  function toggleProNotch() {
-    proNotch = !proNotch;
-    store('ext-pro-notch', proNotch ? '1' : '0');
-    document.body.classList.toggle('ext-pro-notch', proNotch);
-    if (notchButton) {
-      notchButton.textContent = proNotch ? 'Pro Notch: on' : 'Pro Notch';
-      notchButton.setAttribute('aria-pressed', proNotch ? 'true' : 'false');
-    }
+  function cycleNotchMode() {
+    notchMode = ({standard: 'pro', pro: 'off', off: 'standard'})[notchMode];
+    store('ext-notch-mode', notchMode);
+    store('ext-pro-notch', notchMode === 'pro' ? '1' : '0');
+    updateNotchState();
     positionNotch();
     refreshLabels();
     if (lastFrame) { try { window.drawFrame(lastFrame); } catch (e) {} }
@@ -681,6 +695,7 @@ BODY_INJECT = """
     unplug: '<path d="M7 7l10 10M9 4v4M15 4v4M6 8h12v3a6 6 0 0 1-12 0zM12 17v4"/>',
     scroll: '<rect x="7" y="3" width="10" height="18" rx="5"/><path d="M12 7v4"/>',
     refresh: '<path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/>',
+    notch: '<rect x="5" y="2.5" width="14" height="19" rx="3"/><path d="M9 5h6"/>',
     pin: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
     kbd: '<rect x="2.5" y="6" width="19" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/>',
     more: '<circle cx="5.5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="18.5" cy="12" r="1.2"/>',
@@ -697,7 +712,8 @@ BODY_INJECT = """
      ['bell', 'Notifications', () => gestures['Notifications']()],
      ['search', 'Spotlight', () => gestures['Spotlight']()],
      ['siri', 'Siri', upClick('#bottom-row [data-btn="siri"]')],
-     ['kbd', 'Show / hide keyboard', () => toggleKeyboard()]],
+     ['kbd', 'Show / hide keyboard', () => toggleKeyboard()],
+     ['notch', () => notchLabel(), cycleNotchMode]],
     [['zin', 'Zoom in', () => pinch(0.5, 0.5, 1.8)],
      ['zout', 'Zoom out', () => pinch(0.5, 0.5, 0.5)],
      ['shot', 'Screenshot', () => fullResShot({preventDefault() {}, stopImmediatePropagation() {}})],
@@ -1056,7 +1072,7 @@ BODY_INJECT = """
     sound: "Play the phone's sound through this PC (on/off). Turning it on also sets the iPhone volume to 0%; iOS may mute the mirrored audio too",
     pc: 'Set the iPhone volume to 0%. iOS may also mute the audio mirrored to this PC ' +
         '(done automatically whenever PC sound is turned on)',
-    notch: 'Switch the frame between the iPhone 12 notch and a Pro-style Dynamic Island',
+    notch: notchTip(),
     apps: 'Open the App Switcher (or double-click the bar under the phone)',
     auto: 'WebDriverAgent helper: auto-rotate, pinch zoom, and Lite mode during calls. ' +
           'While on, iOS shows "Automation Running" (holding both volume buttons on the phone also turns it off)',
@@ -1089,7 +1105,10 @@ BODY_INJECT = """
     for (const p of pills) {
       p.el.querySelector('span').textContent = typeof p.label === 'function' ? p.label() : p.label;
       if (p.icon === 'sound') p.el.classList.toggle('on', soundOn());
-      if (p.icon === 'notch') p.el.classList.toggle('on', proNotch);
+      if (p.icon === 'notch') {
+        p.el.classList.toggle('on', notchMode !== 'off');
+        p.el.title = notchTip();
+      }
       if (p.icon === 'desk') p.el.classList.toggle('on', deskOn);
       if (p.icon === 'auto') p.el.classList.toggle('on', auto.wanted);
       if (p.icon === 'dim') p.el.classList.toggle('on', dimmed);
@@ -1131,11 +1150,9 @@ BODY_INJECT = """
     b.addEventListener('click', () => { store('ext-compact', '1'); window.fitCanvasToViewport(); }); row.appendChild(b); }
   notchButton = document.createElement('button');
   notchButton.className = 'btn';
-  notchButton.textContent = proNotch ? 'Pro Notch: on' : 'Pro Notch';
-  notchButton.title = 'Toggle between the iPhone 12 notch and a Pro-style Dynamic Island';
-  notchButton.setAttribute('aria-pressed', proNotch ? 'true' : 'false');
-  notchButton.addEventListener('click', toggleProNotch);
+  notchButton.addEventListener('click', cycleNotchMode);
   row.appendChild(notchButton);
+  updateNotchState();
 
   let compactOn = false, menuOpen = false;
   function setMenu(on) {
@@ -1173,7 +1190,8 @@ BODY_INJECT = """
     if (want !== compactOn) {
       compactOn = want; document.body.classList.toggle('ext-compact', want);
       if (want) {
-        moveInto(canvas, extBezel); moveInto(document.getElementById('offline-overlay'), extBezel);
+        moveInto(canvas, extBezel); moveInto(frameNotch, extBezel);
+        moveInto(document.getElementById('offline-overlay'), extBezel);
         for (const hw of document.querySelectorAll('#device-frame .hw')) moveInto(hw, extPhone);
         refreshLabels();
       } else {
@@ -1210,6 +1228,7 @@ BODY_INJECT = """
     place(extPhone, X, OY, pw, ph, R);
     place(extBezel, RIM, RIM, pw - 2 * RIM, ph - 2 * RIM, R - RIM);
     place(canvas, B, B, sw, sh, sr);
+    positionNotch();
     // Home bar centred under the phone (hidden in Big Screen).
     const hbW = Math.round(Math.min(150, pw * 0.36));
     homeBar.style.display = bigFloat ? 'none' : 'flex';

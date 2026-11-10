@@ -247,9 +247,9 @@ needed. Use **Big Screen** for a monitor-filling view; press Esc to leave it.
 
 ### 36. The frame notch does not match my iPhone.
 
-The frame decoration is cosmetic and does not change the actual iPhone display. Use **Pro Notch**
-to switch between the iPhone 12-style notch and Dynamic Island-style pill. The choice is saved and
-shared by the normal and floating views.
+The mirror cutout is a cosmetic overlay. Click the cutout control to cycle between the iPhone
+12-style notch, the wider Pro Dynamic Island, and hidden. It is saved, appears over the live mirror,
+and works in both normal and floating views. It does not change the actual iPhone display.
 
 ### 37. The frame looks misaligned or the phone is clipped.
 
@@ -268,7 +268,8 @@ display scale if the shape remains wrong.
 
 ### 39. The phone frame changes but the live picture does not.
 
-The notch and Pro Notch are visual frame overlays; they do not edit the phone screen or video.
+The notch and Pro Notch are overlays drawn above the live mirror; they do not change the phone or
+the video stream, and saved screenshots remain unaltered.
 If the picture itself is frozen, use the steps for a [black or frozen mirror](#31-the-idesktop-window-is-black).
 
 ### 40. Landscape apps appear rotated incorrectly.
