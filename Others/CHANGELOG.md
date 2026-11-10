@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.1
+
+- Start Menu and desktop shortcuts now launch the installed `iDesktop.bat`, which selects the correct private Python runtime. The PowerShell install and repository-root launcher use the same batch entry point.
+
 ## Unreleased
 
 - Quitting (and Disconnect) now ends Automation on the phone right away: iDesktop kills the WebDriverAgent runner on the phone before exiting, so "Automation Running" goes away at once instead of lingering. Your on/off choice is kept for next time.

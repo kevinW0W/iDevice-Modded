@@ -1,3 +1,2 @@
 @echo off
-cd /d "%~dp0Others"
-start "" "%LOCALAPPDATA%\iDesktop\venv\Scripts\pythonw.exe" -m idesktop.splash %*
+call "%~dp0Others\iDesktop.bat" %*

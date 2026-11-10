@@ -83,7 +83,7 @@ if ($local) {
 if ((Resolve-Path $src).Path -ne $App) {
     if (Test-Path $App) { Remove-Item $App -Recurse -Force }
     New-Item -ItemType Directory -Force $App | Out-Null
-    foreach ($item in 'idesktop', 'assets', 'tools', 'requirements.txt', 'LICENSE', 'README.md', 'extras', 'uninstall.ps1') {
+    foreach ($item in 'idesktop', 'assets', 'tools', 'requirements.txt', 'LICENSE', 'README.md', 'extras', 'uninstall.ps1', 'iDesktop.bat') {
         $p = Join-Path $src $item
         if (Test-Path $p) { Copy-Item $p $App -Recurse -Force }
     }
@@ -131,8 +131,7 @@ Step "Creating shortcuts"
 $shell = New-Object -ComObject WScript.Shell
 function New-Shortcut($path) {
     $s = $shell.CreateShortcut($path)
-    $s.TargetPath = Join-Path $Venv 'Scripts\pythonw.exe'
-    $s.Arguments = '-m idesktop.splash'
+    $s.TargetPath = Join-Path $App 'iDesktop.bat'
     $s.WorkingDirectory = $App
     $s.IconLocation = (Join-Path $App 'assets\idesktop.ico')
     $s.Description = 'Mirror and control your iPhone'

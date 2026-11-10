@@ -22,7 +22,7 @@ Mirror and control your iPhone from a Windows desktop using USB or Wi-Fi.
 ## Download
 
 Get the latest installer from [GitHub Releases](https://github.com/kevinW0W/iDevice-Modded/releases/latest).
-For version 0.1.0, download [`iDesktop-Setup-0.1.0-x64.exe`](https://github.com/kevinW0W/iDevice-Modded/releases/download/v0.1.0/iDesktop-Setup-0.1.0-x64.exe).
+The release page contains the Windows setup executable and release notes.
 
 The installer offers Start Menu and desktop shortcuts, installs to Program Files, and includes
 uninstall support. It detects compatible 64-bit Python 3.13 or can install its bundled runtime;
@@ -39,6 +39,7 @@ application dependencies are included for offline installation.
 ## What's added and improved
 
 - Branded Windows installer with embedded artwork, purple progress, shortcuts, and uninstall.
+- Start Menu and desktop shortcuts launch the installed `iDesktop.bat` entry point.
 - Startup splash with app preview, live startup log, and rounded progress indicator.
 - Clearer issue templates and a detailed troubleshooting guide.
 - Improved phone-frame alignment and remembered notch selection.

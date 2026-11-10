@@ -67,13 +67,14 @@ Source: "{#ProjectRoot}\assets\idesktop-install-preview.png"; DestDir: "{app}\as
 Source: "{#ProjectRoot}\requirements.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#ProjectRoot}\LICENSE"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#ProjectRoot}\README.md"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#ProjectRoot}\iDesktop.bat"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#ProjectRoot}\extras\*"; DestDir: "{app}\extras"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "stop-processes.ps1"; DestDir: "{app}\installer"; Flags: ignoreversion
 
 [Icons]
-Name: "{autoprograms}\iDesktop"; Filename: "{code:GetPythonwPath}"; Parameters: "-m idesktop.splash"; WorkingDir: "{app}"; IconFilename: "{app}\assets\idesktop.ico"; Comment: "Mirror and control your iPhone"; Check: CreateStartMenuShortcuts
+Name: "{autoprograms}\iDesktop"; Filename: "{app}\iDesktop.bat"; WorkingDir: "{app}"; IconFilename: "{app}\assets\idesktop.ico"; Comment: "Mirror and control your iPhone"; Check: CreateStartMenuShortcuts
 Name: "{autoprograms}\Uninstall iDesktop"; Filename: "{uninstallexe}"; WorkingDir: "{app}"; IconFilename: "{app}\assets\idesktop.ico"; Check: CreateStartMenuShortcuts
-Name: "{autodesktop}\iDesktop"; Filename: "{code:GetPythonwPath}"; Parameters: "-m idesktop.splash"; WorkingDir: "{app}"; IconFilename: "{app}\assets\idesktop.ico"; Check: CreateDesktopShortcut
+Name: "{autodesktop}\iDesktop"; Filename: "{app}\iDesktop.bat"; WorkingDir: "{app}"; IconFilename: "{app}\assets\idesktop.ico"; Check: CreateDesktopShortcut
 
 [UninstallRun]
 Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -NonInteractive -ExecutionPolicy Bypass -File ""{app}\installer\stop-processes.ps1"" -InstallRoot ""{app}"""; Flags: runhidden waituntilterminated; RunOnceId: "StopiDesktopProcesses"
@@ -389,14 +390,6 @@ end;
 function CreateStartMenuShortcuts: Boolean;
 begin
   Result := StartMenuShortcutCheck.Checked;
-end;
-
-function GetPythonwPath(Param: String): String;
-begin
-  if InstallPythonCheck.Checked then
-    Result := ExpandConstant('{app}\runtime\pythonw.exe')
-  else
-    Result := ExpandConstant('{app}\runtime\Scripts\pythonw.exe');
 end;
 
 function PrepareToInstall(var NeedsRestart: Boolean): String;
