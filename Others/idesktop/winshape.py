@@ -10,11 +10,15 @@ relative to the window's top-left corner.
 from __future__ import annotations
 
 import ctypes
+import json
 import os
 import threading
 from ctypes import wintypes
 
+from .device import CONFIG_DIR
+
 TITLE = "iDesktop"
+_PIN_FILE = CONFIG_DIR / "window-pin.json"
 
 if os.name == "nt":
     user32 = ctypes.windll.user32
@@ -25,6 +29,9 @@ if os.name == "nt":
         pass
     user32.FindWindowExW.restype = wintypes.HWND
     user32.FindWindowExW.argtypes = [wintypes.HWND, wintypes.HWND, wintypes.LPCWSTR, wintypes.LPCWSTR]
+    user32.SetWindowPos.restype = wintypes.BOOL
+    user32.SetWindowPos.argtypes = [wintypes.HWND, wintypes.HWND, ctypes.c_int, ctypes.c_int,
+                                    ctypes.c_int, ctypes.c_int, wintypes.UINT]
     user32.SetWindowRgn.argtypes = [wintypes.HWND, wintypes.HANDLE, wintypes.BOOL]
     gdi32.CreateRoundRectRgn.restype = wintypes.HANDLE
     gdi32.CreateRectRgn.restype = wintypes.HANDLE
@@ -35,6 +42,8 @@ if os.name == "nt":
     user32.RedrawWindow.argtypes = [wintypes.HWND, ctypes.c_void_p, wintypes.HANDLE, wintypes.UINT]
 
 SWP_NOMOVE, SWP_NOSIZE, SWP_NOZORDER, SWP_NOACTIVATE = 0x2, 0x1, 0x4, 0x10
+HWND_TOPMOST = wintypes.HWND(-1)
+HWND_NOTOPMOST = wintypes.HWND(-2)
 RGN_OR = 2
 WM_CLOSE, SW_MINIMIZE, SW_RESTORE, SW_MAXIMIZE = 0x0010, 6, 9, 3
 RDW_INVALIDATE, RDW_ERASE, RDW_FRAME, RDW_ALLCHILDREN = 0x1, 0x4, 0x400, 0x80
@@ -43,6 +52,48 @@ _lock = threading.Lock()
 _hwnd = None
 _last_spec = None      # the shape to keep (None: unclipped)
 _watch = None
+_pin_watch = None
+_pinned = None
+
+
+def pin_enabled() -> bool:
+    global _pinned
+    if _pinned is None:
+        try:
+            data = json.loads(_PIN_FILE.read_text(encoding="utf-8"))
+        except FileNotFoundError:
+            _pinned = True
+        else:
+            if not isinstance(data, dict) or not isinstance(data.get("enabled"), bool):
+                raise ValueError(f"Invalid window pin setting in {_PIN_FILE}")
+            _pinned = data["enabled"]
+    return _pinned
+
+
+def _set_pin(hwnd, enabled: bool) -> None:
+    insert_after = HWND_TOPMOST if enabled else HWND_NOTOPMOST
+    if not user32.SetWindowPos(hwnd, insert_after, 0, 0, 0, 0,
+                               SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE):
+        raise ctypes.WinError()
+
+
+def _save_pin(enabled: bool) -> None:
+    _PIN_FILE.parent.mkdir(parents=True, exist_ok=True)
+    temp = _PIN_FILE.with_suffix(".tmp")
+    temp.write_text(json.dumps({"enabled": enabled}), encoding="utf-8")
+    os.replace(temp, _PIN_FILE)
+
+
+def _pin_watchdog() -> None:
+    import time
+    while True:
+        time.sleep(0.5)
+        try:
+            hwnd = find_window()
+            if hwnd:
+                _set_pin(hwnd, pin_enabled())
+        except OSError:
+            pass
 
 
 def _set_backdrop(hwnd, kind: int) -> None:
@@ -68,11 +119,12 @@ def _rect(hwnd) -> wintypes.RECT:
 
 def find_window():
     """The viewer's top-level Edge/Chrome window (title set by the page)."""
-    global _hwnd
+    global _hwnd, _pin_watch
     if _hwnd and user32.IsWindow(_hwnd):
         buf = ctypes.create_unicode_buffer(256)
         user32.GetWindowTextW(_hwnd, buf, 256)
-        if buf.value.startswith(TITLE):
+        if buf.value.startswith(TITLE) and user32.IsWindowVisible(_hwnd):
+            _set_pin(_hwnd, pin_enabled())
             return _hwnd
     _hwnd = None
     h = None
@@ -84,6 +136,10 @@ def find_window():
         user32.GetWindowTextW(h, buf, 256)
         if buf.value == TITLE and user32.IsWindowVisible(h):
             _hwnd = h
+            _set_pin(h, pin_enabled())
+            if _pin_watch is None:
+                _pin_watch = threading.Thread(target=_pin_watchdog, daemon=True)
+                _pin_watch.start()
             return h
 
 
@@ -202,11 +258,23 @@ def move_by(dx: int, dy: int) -> None:
                             SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE)
 
 
-def command(cmd: str) -> None:
+def command(cmd: str) -> bool:
+    global _pinned
     hwnd = find_window()
     if not hwnd:
-        return
+        return False
     if cmd == "min":
         user32.ShowWindow(hwnd, SW_MINIMIZE)
     elif cmd == "close":
         user32.PostMessageW(hwnd, WM_CLOSE, 0, 0)
+    elif cmd == "pin-toggle":
+        enabled = not pin_enabled()
+        _save_pin(enabled)
+        _pinned = enabled
+        _set_pin(hwnd, enabled)
+    elif cmd in ("pin", "pin-on", "pin-off"):
+        enabled = cmd != "pin-off" if cmd != "pin" else not pin_enabled()
+        _save_pin(enabled)
+        _pinned = enabled
+        _set_pin(hwnd, enabled)
+    return True

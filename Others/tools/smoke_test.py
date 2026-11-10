@@ -69,8 +69,33 @@ def helpers_import():
     assert (app.RECONNECT_EXIT, app.DISCONNECT_EXIT, app.RECONNECT_FLAG) ==         (native.RECONNECT_EXIT, native.DISCONNECT_EXIT, native.RECONNECT_FLAG)
 
 
+def splash_art_renders():
+    from PIL import Image
+
+    from idesktop.splash import _draw_pill, _make_laptop_frame
+
+    preview = Path(__file__).resolve().parents[1] / "assets" / "idesktop-install-preview.png"
+    laptop = _make_laptop_frame(Image.open(preview))
+    assert laptop.size == (440, 300) and laptop.getbbox() is not None
+
+    class Canvas:
+        def __init__(self):
+            self.shapes = []
+
+        def create_rectangle(self, *args, **kwargs):
+            self.shapes.append(("rectangle", args, kwargs))
+
+        def create_oval(self, *args, **kwargs):
+            self.shapes.append(("oval", args, kwargs))
+
+    canvas = Canvas()
+    _draw_pill(canvas, 0, 0, 100, 10, "#63a5ff")
+    assert [shape[0] for shape in canvas.shapes] == ["rectangle", "oval", "oval"]
+
+
 check("winshape without a window", winshape_without_window)
 check("native patches apply", native_patches_apply)
 check("audio decoder opens", audio_decoder_opens)
 check("modules import", helpers_import)
+check("splash artwork and rounded progress render", splash_art_renders)
 sys.exit(1 if failures else 0)

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import ctypes
+import atexit
 import os
 import shutil
 import subprocess
@@ -23,6 +24,22 @@ from .device import CONFIG_DIR, DeviceManager, pmd, tunneld_devices, usbmuxd_run
 LOGS = CONFIG_DIR / "logs"
 NATIVE_MIN_IOS = 27
 CAMERA_BUSY = "camera-busy"
+keyboard_capture_process = None
+
+
+def start_keyboard_capture() -> None:
+    global keyboard_capture_process
+    hook = Path(__file__).with_name("keyboard_capture.py")
+    if not hook.exists() or keyboard_capture_process is not None:
+        return
+    keyboard_capture_process = subprocess.Popen([sys.executable, str(hook)],
+                                                creationflags=subprocess.CREATE_NO_WINDOW)
+
+    def stop_keyboard_capture() -> None:
+        if keyboard_capture_process is not None:
+            keyboard_capture_process.terminate()
+
+    atexit.register(stop_keyboard_capture)
 
 
 def msg(text: str, title: str = "iDesktop", error: bool = False, retry: bool = False) -> bool:
@@ -111,7 +128,7 @@ def open_app_window(url: str) -> subprocess.Popen | None:
         return None
     profile = CONFIG_DIR / "browser-profile"
     # Fit the window to the usable screen (above the taskbar) at a phone-ish aspect.
-    h, top = 1160, 10
+    h, top = 900, 10
     try:
         from ctypes import wintypes
         rect = wintypes.RECT()
@@ -151,6 +168,7 @@ def _alive(url: str) -> bool:
 RECONNECT_EXIT = 3   # native.py exits with this when its tunnel to the phone dies
 DISCONNECT_EXIT = 4  # ...and with this when the user clicked Disconnect
 RECONNECT_FLAG = "reconnect.request"
+USB_RECONNECT_GRACE = 12
 
 
 def run_native(udid: str, transport: list[str], wda_bundle: str | None, wifi_host: str | None = None,
@@ -259,9 +277,10 @@ def run_native(udid: str, transport: list[str], wda_bundle: str | None, wifi_hos
                 pass
 
 
-def pick_transport(dm: DeviceManager, log=print, quiet: bool = False) -> tuple[str, list[str], str] | None:
-    """Returns (udid, pymobiledevice3 device args, iOS version) or None. quiet: no setup dialogs
-    (reconnecting in the background) - just report "not yet"."""
+def pick_transport(dm: DeviceManager, log=print, quiet: bool = False,
+                   usb_only: bool = False) -> tuple[str, list[str], str, str | None] | None:
+    """Returns (udid, device args, iOS version, Wi-Fi fallback IP) or None.
+    quiet avoids setup dialogs; usb_only delays wireless fallback during reconnect."""
     usb = []
     try:
         usb = dm.list_usb()
@@ -284,9 +303,10 @@ def pick_transport(dm: DeviceManager, log=print, quiet: bool = False) -> tuple[s
                     raise SystemExit(0)
         pmd("lockdown", "wifi-connections", "on", "--udid", udid, timeout=20)
         device.ensure_wifi_pairing(udid)  # so the next start can be cable-free
-        td = tunneld_devices() or {}
-        tr = ["--tunnel", udid] if udid in td else ["--userspace", "--udid", udid]
-        return udid, tr, str(d.get("ProductVersion", "0"))
+        log(f"Found {d.get('DeviceName', 'iPhone')} over USB; using the wired userspace tunnel.")
+        return udid, ["--userspace", "--udid", udid], str(d.get("ProductVersion", "0")), None
+    if usb_only:
+        return None
     # No cable: the no-admin tunnel can still be dialled over Wi-Fi straight to the phone's last
     # known IP (native.patch_wifi_fallback); needs "Wi-Fi connections" on, set while plugged in.
     ios = str(dm.cfg.get("ios", "0"))
@@ -296,7 +316,7 @@ def pick_transport(dm: DeviceManager, log=print, quiet: bool = False) -> tuple[s
             log(f"No USB iPhone found; connecting over Wi-Fi to {ip}...")
             dm.cfg["ip"] = ip
             device.save_config(dm.cfg)
-            return dm.cfg["udid"], ["--userspace", "--udid", dm.cfg["udid"]], ios
+            return dm.cfg["udid"], ["--userspace", "--udid", dm.cfg["udid"]], ios, ip
     if quiet:
         return None  # never pop an admin prompt from a background reconnect
     # Older iOS: a running tunneld (admin) can reach the phone over Wi-Fi.
@@ -311,7 +331,7 @@ def pick_transport(dm: DeviceManager, log=print, quiet: bool = False) -> tuple[s
             time.sleep(1)
     if td:
         udid = dm.cfg.get("udid") if dm.cfg.get("udid") in td else next(iter(td))
-        return udid, ["--tunnel", udid], str(dm.cfg.get("ios", "27"))
+        return udid, ["--tunnel", udid], str(dm.cfg.get("ios", "27")), None
     return None
 
 
@@ -335,6 +355,7 @@ def _main() -> None:
     if not single_instance():
         msg("iDesktop is already running.")
         return
+    start_keyboard_capture()
     if a.classic:
         sys.argv = [sys.argv[0], *rest]
         from .controller import main as classic
@@ -348,7 +369,7 @@ def _main() -> None:
     if not pick:
         msg("No iPhone found. Plug it in by USB, unlock it, and tap Trust.", error=True)
         return
-    udid, transport, ios = pick
+    udid, transport, ios, wifi_host = pick
     dm.cfg["ios"] = ios
     device.save_config(dm.cfg)
 
@@ -367,17 +388,24 @@ def _main() -> None:
             device.save_config(dm.cfg)
         else:
             bundle = dm.cfg.get("wda_bundle")  # no cable: the app lookup needs USB; reuse the last one
-        def retarget():
-            pick2 = pick_transport(dm, quiet=True)
-            return (pick2[1], dm.cfg.get("ip")) if pick2 else None
+        usb_wait_started = time.monotonic()
 
-        r = run_native(udid, transport, bundle, dm.cfg.get("ip"), retarget=retarget)
+        def retarget():
+            nonlocal usb_wait_started
+            usb_only = time.monotonic() - usb_wait_started < USB_RECONNECT_GRACE
+            pick2 = pick_transport(dm, quiet=True, usb_only=usb_only)
+            if pick2:
+                usb_wait_started = time.monotonic()
+            return (pick2[1], pick2[3]) if pick2 else None
+
+        r = run_native(udid, transport, bundle, wifi_host, retarget=retarget)
         if r is True:
             return
         if not bundle:
             # Basic mode is WebDriverAgent's screenshot stream; without the extra there's no fallback.
             why = ("iOS pauses HD mirroring while a call or an app is using the camera or microphone."
-                   if r == CAMERA_BUSY else "HD mirroring failed to start (see logs\\native.log).")
+                   if r == CAMERA_BUSY else
+                   f"HD mirroring failed to start. Details: {LOGS / 'native.log'}")
             msg(why + "\n\nLite mode (which keeps working during calls) needs the optional WebDriverAgent "
                 "extra - see the README. Otherwise, try again after the call.", error=r != CAMERA_BUSY)
             return
@@ -387,7 +415,7 @@ def _main() -> None:
             notice = ("HD mirroring is paused by iOS while a call or an app is using the camera/mic. "
                       "Using Lite mode; reopen iDesktop after the call for HD.")
         else:
-            notice = "HD mirroring failed to start (see logs\\native.log); using Lite mode."
+            notice = f"HD mirroring failed to start; using Lite mode. Details: {LOGS / 'native.log'}"
         rest = [*rest, "--notice", notice]
         print(notice)
     sys.argv = [sys.argv[0], "--autoconnect", *rest]

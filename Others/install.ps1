@@ -1,6 +1,6 @@
 # iDesktop installer for Windows 10/11.
 #
-#   irm https://raw.githubusercontent.com/realxhabib/iDesktop/main/install.ps1 | iex
+#   irm https://raw.githubusercontent.com/kevinW0W/iDevice-Modded/main/Others/install.ps1 | iex
 #
 # Re-run the same command to update. Installs per-user (no admin needed) into
 # %LOCALAPPDATA%\iDesktop and adds Start Menu + desktop shortcuts.
@@ -11,7 +11,7 @@
 
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'   # Invoke-WebRequest is ~10x faster without the bar
-$Repo = 'realxhabib/iDesktop'
+$Repo = 'kevinW0W/iDevice-Modded'
 $Ref = if ($env:IDESKTOP_REF) { $env:IDESKTOP_REF } else { 'main' }
 $Root = Join-Path $env:LOCALAPPDATA 'iDesktop'
 $App = Join-Path $Root 'app'
@@ -76,7 +76,9 @@ if ($local) {
     $tmp = Join-Path $env:TEMP "idesktop-$([guid]::NewGuid())"
     Expand-Archive $zip $tmp -Force
     Remove-Item $zip
-    $src = (Get-ChildItem $tmp -Directory | Select-Object -First 1).FullName
+    $repoRoot = (Get-ChildItem $tmp -Directory | Select-Object -First 1).FullName
+    $src = Join-Path $repoRoot 'Others'
+    if (-not (Test-Path $src)) { $src = $repoRoot }
 }
 if ((Resolve-Path $src).Path -ne $App) {
     if (Test-Path $App) { Remove-Item $App -Recurse -Force }
@@ -130,7 +132,7 @@ $shell = New-Object -ComObject WScript.Shell
 function New-Shortcut($path) {
     $s = $shell.CreateShortcut($path)
     $s.TargetPath = Join-Path $Venv 'Scripts\pythonw.exe'
-    $s.Arguments = '-m idesktop'
+    $s.Arguments = '-m idesktop.splash'
     $s.WorkingDirectory = $App
     $s.IconLocation = (Join-Path $App 'assets\idesktop.ico')
     $s.Description = 'Mirror and control your iPhone'
@@ -150,5 +152,5 @@ Write-Host @"
 
   After one wired start, iDesktop also works over Wi-Fi with no cable.
   Uninstall: run uninstall.ps1 in $App, or
-    irm https://raw.githubusercontent.com/$Repo/main/uninstall.ps1 | iex
+    irm https://raw.githubusercontent.com/$Repo/main/Others/uninstall.ps1 | iex
 "@

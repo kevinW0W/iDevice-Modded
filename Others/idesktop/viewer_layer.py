@@ -48,6 +48,11 @@ try { for (const s of ['left','right']) if (!localStorage.getItem('tray-'+s)) lo
  #ext-bezel { position:absolute; box-sizing:border-box; background:#030303;
    box-shadow:inset 0 0 0 1px #1d1d1f, inset 0 0 6px #000 }
  body.ext-compact #ext-bezel canvas { display:block; position:absolute }
+ #stage { align-items:center !important }
+ #ext-notch { position:absolute; z-index:4; display:none; pointer-events:none; background:#000 }
+ body.frame-on #device-frame #ext-notch, body.ext-compact #ext-bezel #ext-notch { display:block }
+ #ext-notch.standard { border-radius:0 0 48% 48% / 0 0 30% 30% }
+ #ext-notch.pro { border-radius:999px; box-shadow:0 1px 2px #0008 }
  body.ext-compact #ext-phone .hw { position:absolute !important; display:block !important; margin:0 !important;
    padding:0 !important; border:0 !important; min-width:0 !important; transform:none !important;
    background:linear-gradient(90deg,#57554f,#a19e97 55%,#4f4d49) !important; border-radius:2px !important;
@@ -64,6 +69,7 @@ try { for (const s of ['left','right']) if (!localStorage.getItem('tray-'+s)) lo
  .ext-fab:hover, .ext-pill:hover { background:#34343a }
  .ext-fab:active, .ext-pill:active { background:#1b1b1f }
  .ext-fab { justify-content:center; border-radius:10px }
+ .ext-fab.on { background:#1d2b40; color:#6cb4ff }
  .ext-pill { padding:0 12px 0 11px; gap:9px; border-radius:8px; white-space:nowrap }
  .ext-pill.on { background:#1d2b40; color:#6cb4ff }
  .ext-pill.on:hover { background:#24354e }
@@ -540,7 +546,6 @@ BODY_INJECT = """
     if (!natW || !natH) return;
     try { if (compactLayout()) return; } catch (e) { report('compactLayout: ' + e.stack); }
     const frameOn = document.body.classList.contains('frame-on');
-    const bezel = frameOn ? 1.07 : 1;
     const big = document.body.classList.contains('ext-big');
     const top = big ? 0 : document.getElementById('topbar').getBoundingClientRect().height;
     const bottom = big ? 0 : row.getBoundingClientRect().height;
@@ -549,10 +554,12 @@ BODY_INJECT = """
       .map(id => document.getElementById(id)?.getBoundingClientRect().width || 0).reduce((a, b) => a + b, 0);
     const vw = document.documentElement.clientWidth, vh = document.documentElement.clientHeight;
     const pad = big ? 0 : 40;
-    const availW = (vw - (big ? 0 : trays) - pad) / bezel;
-    const availH = (vh - top - bottom - pad) / bezel;
+    const availW = vw - (big ? 0 : trays) - pad;
+    const availH = vh - top - bottom - pad;
     const z = (typeof zoom === 'number' ? zoom : 1);
-    const scale = Math.min(availW / natW, availH / natH) * z;
+    const frameExtra = frameOn ? Math.max(10, Math.min(natW, natH) * 0.07) : 0;
+    const scale = Math.min(availW / (natW + frameExtra),
+                           availH / (natH + frameExtra)) * z;
     const w = natW * scale, h = natH * scale;
     canvas.style.width = w + 'px';
     canvas.style.height = h + 'px';
@@ -561,6 +568,7 @@ BODY_INJECT = """
     fs.setProperty('--screen-r', (shortSide * 0.125) + 'px');
     fs.setProperty('--bezel', Math.max(5, shortSide * 0.035) + 'px');
     fs.setProperty('--hw-t', Math.max(3, shortSide * 0.014) + 'px');
+    positionNotch();
   };
   window.addEventListener('resize', () => {
     window.fitCanvasToViewport();
@@ -575,6 +583,39 @@ BODY_INJECT = """
   const compactPref = () => stored('ext-compact') !== '0';
   const extPhone = document.createElement('div'); extPhone.id = 'ext-phone';
   const extBezel = document.createElement('div'); extBezel.id = 'ext-bezel';
+  const deviceFrame = document.getElementById('device-frame');
+  const frameNotch = document.createElement('div'); frameNotch.id = 'ext-notch';
+  deviceFrame.appendChild(frameNotch);
+  let proNotch = stored('ext-pro-notch') === '1', notchButton = null;
+  document.body.classList.toggle('ext-pro-notch', proNotch);
+  function positionNotch() {
+    if (!canvas.offsetWidth || !canvas.offsetHeight) return;
+    const width = Math.round(canvas.offsetWidth * (proNotch ? 0.28 : 0.38));
+    const height = proNotch
+      ? Math.max(10, Math.round(canvas.offsetWidth * 0.045))
+      : Math.max(18, Math.round(canvas.offsetWidth * 0.078));
+    const top = canvas.offsetTop + (proNotch ? Math.max(5, Math.round(canvas.offsetWidth * 0.018)) : 0);
+    Object.assign(frameNotch.style, {
+      left: Math.round(canvas.offsetLeft + (canvas.offsetWidth - width) / 2) + 'px',
+      top: top + 'px',
+      width: width + 'px',
+      height: height + 'px',
+    });
+    frameNotch.classList.toggle('pro', proNotch);
+    frameNotch.classList.toggle('standard', !proNotch);
+  }
+  function toggleProNotch() {
+    proNotch = !proNotch;
+    store('ext-pro-notch', proNotch ? '1' : '0');
+    document.body.classList.toggle('ext-pro-notch', proNotch);
+    if (notchButton) {
+      notchButton.textContent = proNotch ? 'Pro Notch: on' : 'Pro Notch';
+      notchButton.setAttribute('aria-pressed', proNotch ? 'true' : 'false');
+    }
+    positionNotch();
+    refreshLabels();
+    if (lastFrame) { try { window.drawFrame(lastFrame); } catch (e) {} }
+  }
   const camCtl = document.createElement('div'); camCtl.id = 'ext-camctl';   // Camera Control (cosmetic)
   const extCtl = document.createElement('div'); extCtl.id = 'ext-ctl';
   extPhone.append(extBezel, camCtl); document.body.append(extPhone, extCtl);
@@ -603,7 +644,18 @@ BODY_INJECT = """
   const moveInto = (node, dest) => { if (!node || node.parentNode === dest) return;
                                      moved.push([node, node.parentNode, node.nextSibling]); dest.appendChild(node); };
   const restoreMoved = () => { while (moved.length) { const [n, p, s] = moved.pop(); p.insertBefore(n, s && s.parentNode === p ? s : null); } };
-  const winCmd = (cmd) => fetch(EXT + '/window/cmd', {method: 'POST', body: JSON.stringify({cmd})}).catch(() => {});
+  const winCmd = (cmd) => fetch(EXT + '/window/cmd', {method: 'POST', body: JSON.stringify({cmd})})
+    .then(r => r.ok).catch(() => false);
+  async function pinStatus() {
+    for (let attempt = 0; attempt < 20; attempt++) {
+      try {
+        const response = await fetch(EXT + '/window/cmd', {method: 'POST', body: JSON.stringify({cmd: 'pin-status'})});
+        if (response.ok) return (await response.json()).pinned;
+      } catch (e) {}
+      await new Promise(resolve => setTimeout(resolve, 250));
+    }
+    report('Could not read the iDesktop pin setting.');
+  }
   const ICON = {
     home: '<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/>',
     apps: '<rect x="4" y="4" width="11" height="14" rx="2"/><path d="M19 7v12a2 2 0 0 1-2 2H9"/>',
@@ -622,6 +674,8 @@ BODY_INJECT = """
     plus: '<path d="M12 5v14M5 12h14"/>', minus: '<path d="M5 12h14"/>',
     layout: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/>',
     min: '<path d="M6 18h12"/>', close: '<path d="M6 6l12 12M18 6L6 18"/>',
+    pinWindowOn: '<path d="M8 3h8l-1 2v4l3 3v2h-5v7l-1 1-1-1v-7H6v-2l3-3V5z"/><path d="M8 3h8"/>',
+    pinWindowOff: '<path d="M8 3h8l-1 2v4l3 3v2h-5v7l-1 1-1-1v-7H6v-2l3-3V5z"/><path d="M4 4l16 16"/>',
     auto: '<rect x="5" y="8" width="14" height="11" rx="3"/><path d="M12 8V4.5M9.5 13h.01M14.5 13h.01M2.5 12.5v3M21.5 12.5v3"/><circle cx="12" cy="4" r="1"/>',
     dim: '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>',
     unplug: '<path d="M7 7l10 10M9 4v4M15 4v4M6 8h12v3a6 6 0 0 1-12 0zM12 17v4"/>',
@@ -650,8 +704,8 @@ BODY_INJECT = """
      ['desk', () => deskOn ? 'Exit Desktop Mode' : 'Desktop Mode', () => setDesktop(!deskOn)]],
     [['sound', () => soundOn() ? 'PC sound: on' : 'PC sound: off',
       () => { const was = soundOn(); soundBtnUp?.click();
-              setTimeout(() => { refreshLabels(); if (!was && soundOn()) phoneVolumeLow(); }, 400); }],
-     ['pc', 'Sound on PC only', () => phoneVolumeLow()],
+              setTimeout(() => { refreshLabels(); if (!was && soundOn()) phoneVolumeMute(); }, 400); }],
+     ['pc', 'Sound on PC only', () => phoneVolumeMute()],
      ['dim', () => dimmed ? 'Undim phone' : 'Dim phone', () => toggleDim()],
      ['auto', () => auto.wanted ? 'Automation: on' : 'Automation: off', () => setAutomation(!auto.wanted)]],
     [['plus', 'Bigger', () => resizeL(1.1)],
@@ -926,15 +980,14 @@ BODY_INJECT = """
       await sleep(60);
     }
   }
-  // Phone volume to its lowest audible step (the volume keys, all the way down then one up). The PC
-  // copy of the sound is taken before the phone's volume, so it stays loud - but 0 mutes it too.
-  // Done whenever PC sound is turned on, so the sound comes out of the PC instead of both.
+  // Mute the phone without sending a volume-up press afterward. iOS may also mute the mirrored PC
+  // audio at zero; do not raise the phone volume again after reaching mute.
   let volBusy = false;
-  async function phoneVolumeLow() {
+  async function phoneVolumeMute() {
     if (volBusy) return; volBusy = true;
     try {
-      await press('volume-down', 17); await press('volume-up', 1);
-      toast('Phone volume set to its lowest step - the sound plays on the PC');
+      await press('volume-down', 17);
+      toast('iPhone volume muted. iOS may also mute audio mirrored to this PC.');
     } finally { volBusy = false; }
   }
   async function toggleDim() {
@@ -1000,9 +1053,10 @@ BODY_INJECT = """
     zout: 'Two-finger zoom out (or Ctrl + mouse wheel). Needs Automation',
     shot: 'Save a full-resolution screenshot to Downloads (Ctrl+P)',
     desk: 'Extra-small text on the phone: denser, iPad-like layouts. Click again to restore your text size',
-    sound: "Play the phone's sound on this PC (on/off). Turning it on also drops the phone's volume to its lowest step",
-    pc: 'Turn the phone volume down to its lowest step: the PC keeps full volume, the phone is nearly silent ' +
+    sound: "Play the phone's sound through this PC (on/off). Turning it on also sets the iPhone volume to 0%; iOS may mute the mirrored audio too",
+    pc: 'Set the iPhone volume to 0%. iOS may also mute the audio mirrored to this PC ' +
         '(done automatically whenever PC sound is turned on)',
+    notch: 'Switch the frame between the iPhone 12 notch and a Pro-style Dynamic Island',
     apps: 'Open the App Switcher (or double-click the bar under the phone)',
     auto: 'WebDriverAgent helper: auto-rotate, pinch zoom, and Lite mode during calls. ' +
           'While on, iOS shows "Automation Running" (holding both volume buttons on the phone also turns it off)',
@@ -1035,6 +1089,7 @@ BODY_INJECT = """
     for (const p of pills) {
       p.el.querySelector('span').textContent = typeof p.label === 'function' ? p.label() : p.label;
       if (p.icon === 'sound') p.el.classList.toggle('on', soundOn());
+      if (p.icon === 'notch') p.el.classList.toggle('on', proNotch);
       if (p.icon === 'desk') p.el.classList.toggle('on', deskOn);
       if (p.icon === 'auto') p.el.classList.toggle('on', auto.wanted);
       if (p.icon === 'dim') p.el.classList.toggle('on', dimmed);
@@ -1043,10 +1098,44 @@ BODY_INJECT = """
   }
   const fab = document.createElement('div'); fab.className = 'ext-fab'; fab.title = 'Controls (Ctrl+M)';
   fab.innerHTML = svg('more'); extCtl.appendChild(fab);
+  const pinFab = document.createElement('div'); pinFab.className = 'ext-fab';
+  extCtl.appendChild(pinFab);
+  let pinOn = true;
+  const updatePinButton = () => {
+    pinFab.classList.toggle('on', pinOn);
+    pinFab.title = pinOn ? 'Always on top: on (click to turn off)' : 'Always on top: off (click to turn on)';
+    pinFab.setAttribute('aria-label', pinFab.title);
+    pinFab.innerHTML = svg(pinOn ? 'pinWindowOn' : 'pinWindowOff');
+  };
+  updatePinButton();
+  pinFab.addEventListener('click', async (e) => {
+    e.stopPropagation();
+    const next = !pinOn;
+    if (!await winCmd(next ? 'pin-on' : 'pin-off')) {
+      report('Could not change the iDesktop pin setting.');
+      return;
+    }
+    pinOn = next;
+    updatePinButton();
+  });
+  pinStatus().then(enabled => {
+    if (typeof enabled === 'boolean') { pinOn = enabled; updatePinButton(); }
+  });
+  const minFab = document.createElement('div'); minFab.className = 'ext-fab';
+  minFab.title = 'Minimize iDesktop'; minFab.setAttribute('aria-label', minFab.title);
+  minFab.innerHTML = svg('min'); extCtl.appendChild(minFab);
+  minFab.addEventListener('click', (e) => { e.stopPropagation(); winCmd('min'); });
   fab.addEventListener('click', (e) => { e.stopPropagation(); setMenu(!menuOpen); });
   { const b = document.createElement('button'); b.className = 'btn'; b.textContent = 'Floating Phone'; b.id = 'ext-to-compact';
     b.title = 'Just the phone, floating on the desktop (Ctrl+M for controls)';
     b.addEventListener('click', () => { store('ext-compact', '1'); window.fitCanvasToViewport(); }); row.appendChild(b); }
+  notchButton = document.createElement('button');
+  notchButton.className = 'btn';
+  notchButton.textContent = proNotch ? 'Pro Notch: on' : 'Pro Notch';
+  notchButton.title = 'Toggle between the iPhone 12 notch and a Pro-style Dynamic Island';
+  notchButton.setAttribute('aria-pressed', proNotch ? 'true' : 'false');
+  notchButton.addEventListener('click', toggleProNotch);
+  row.appendChild(notchButton);
 
   let compactOn = false, menuOpen = false;
   function setMenu(on) {
@@ -1144,7 +1233,7 @@ BODY_INJECT = """
     }
     // Floating controls beside the phone: on the right if they fit on screen, else on the left;
     // a second column when the list is taller than the space below the phone's top.
-    const GAPC = 8, STEP = PH + 4, Y0 = FAB + 10;
+    const GAPC = 8, STEP = PH + 4, Y0 = FAB * 2 + 14;
     const bottomLimit = (full ? innerHeight : screen.availHeight) - OY - 6;
     const placed = [];
     let y = Y0, col = 0;
@@ -1157,16 +1246,21 @@ BODY_INJECT = """
       y += STEP;
     }
     const cols = placed.length ? col + 1 : 0;
-    const ctlW = Math.max(FAB, cols * PW + (cols - 1) * GAPC);
+    const FAB_GAP = 6, FAB_ROW = FAB * 3 + FAB_GAP * 2;
+    const ctlW = Math.max(FAB_ROW, cols * PW + (cols - 1) * GAPC);
     const rightX = X + CXR, leftX = X - 14 - ctlW;
     const onLeft = full && rightX + ctlW > innerWidth - 4 && leftX >= 4;
     const CX = onLeft ? leftX : rightX;
     Object.assign(extCtl.style, {left: CX + 'px', top: OY + 'px'});
-    const fabX = onLeft ? ctlW - FAB : 0;
+    const fabX = onLeft ? ctlW - FAB_ROW : 0;
     // Small corner radii on purpose: the window region that cuts these out isn't anti-aliased,
     // so large round ends show stair steps; 8-10 px corners look crisp.
     place(fab, fabX, 0, FAB, FAB, 10);
     shapes.push({x: CX + fabX, y: OY, w: FAB, h: FAB, r: 10});
+    place(pinFab, fabX + FAB + FAB_GAP, 0, FAB, FAB, 10);
+    shapes.push({x: CX + fabX + FAB + FAB_GAP, y: OY, w: FAB, h: FAB, r: 10});
+    place(minFab, fabX + (FAB + FAB_GAP) * 2, 0, FAB, FAB, 10);
+    shapes.push({x: CX + fabX + (FAB + FAB_GAP) * 2, y: OY, w: FAB, h: FAB, r: 10});
     for (const [p, c, py] of placed) {
       const px = onLeft ? ctlW - PW - c * (PW + GAPC) : c * (PW + GAPC);   // column 0 next to the phone
       place(p.el, px, py, PW, PH, 8);

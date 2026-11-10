@@ -1,5 +1,5 @@
 # Remove iDesktop: the app, its Python environment and the shortcuts.
-#   irm https://raw.githubusercontent.com/realxhabib/iDesktop/main/uninstall.ps1 | iex
+#   irm https://raw.githubusercontent.com/kevinW0W/iDevice-Modded/main/Others/uninstall.ps1 | iex
 # Settings and logs in %APPDATA%\iDesktop are kept unless IDESKTOP_PURGE=1 is set.
 # Apple Devices, Python and the phone's pairing are left alone.
 

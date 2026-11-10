@@ -1,31 +1,76 @@
 name: It works on my setup
-description: Tell us iDesktop works on your iPhone / PC, so others know it's supported
+description: Share a setup where iDesktop works so others can compare compatibility
+title: "[Works on my setup]: "
 labels: [compatibility]
 body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for sharing a successful setup. These reports help other users know which devices,
+        Windows versions, and connection methods have been tested.
+        Please do not include your phone's serial number, UDID, phone number, or private network details.
   - type: input
     id: iphone
     attributes:
-      label: iPhone model and iOS version
+      label: iPhone model
+      placeholder: "iPhone 12"
     validations:
       required: true
   - type: input
-    id: pc
+    id: ios_version
     attributes:
-      label: Windows version and GPU
+      label: iOS version
+      description: Use the full version shown under Settings > General > About.
+      placeholder: "iOS 27.0.1"
+    validations:
+      required: true
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version and PC hardware
+      description: Include Windows 10/11, and GPU model if known.
+      placeholder: "Windows 11 25H2, Intel Iris Xe"
+    validations:
+      required: true
+  - type: input
+    id: app_version
+    attributes:
+      label: iDesktop version and install method
+      placeholder: "0.1.0, Windows installer"
+    validations:
+      required: true
+  - type: dropdown
+    id: connection
+    attributes:
+      label: Connection method tested
+      options:
+        - USB cable
+        - Wi-Fi after USB pairing
+        - Both USB and Wi-Fi
     validations:
       required: true
   - type: checkboxes
-    id: works
+    id: features
     attributes:
-      label: What works
+      label: What did you test successfully?
+      description: Select only features you tried yourself.
       options:
-        - label: HD mirror over USB
-        - label: HD mirror over Wi-Fi
-        - label: Sound
-        - label: Keyboard
-        - label: Clipboard sync
-        - label: WebDriverAgent extra (pinch, rotate, basic mode)
+        - label: HD screen mirroring
+        - label: Touch, swipes, and scrolling
+        - label: Keyboard input
+        - label: Audio through the PC
+        - label: Clipboard text sync
+        - label: Clipboard image sync
+        - label: Floating phone window
+        - label: iPhone 12 notch and Pro Notch toggle
+        - label: WebDriverAgent features (rotation, pinch, or Lite mode)
   - type: textarea
     id: notes
     attributes:
-      label: Notes
+      label: Helpful details for someone with the same setup
+      description: |
+        Mention anything that needed extra steps, limitations you noticed, or how long you tested.
+        Do not post private device identifiers or logs containing personal information.
+      placeholder: |
+        USB worked after unlocking the phone and accepting Trust This Computer.
+        Wi-Fi worked after the first USB connection while both devices were on the same network.

@@ -5,31 +5,31 @@
 <h1 align="center">iDesktop</h1>
 
 <p align="center">
-  <b>Your iPhone, floating on your Windows desktop.</b><br>
-  Live HD mirror with touch, keyboard and sound, over USB or Wi-Fi. Free and open source.
+  <b>Use your iPhone from your Windows desktop.</b><br>
+  A live phone mirror with PC controls, optional floating frame, and USB or Wi-Fi connectivity.
 </p>
 
+> **Community fork:** This project is based on [realxhabib/iDesktop](https://github.com/realxhabib/iDesktop),
+> originally published under the GNU GPL-3.0 license. Original authors and contributors retain credit
+> for their work; changes in this fork are maintained separately.
+
 <p align="center">
-  <a href="https://github.com/realxhabib/iDesktop/actions/workflows/ci.yml"><img src="https://github.com/realxhabib/iDesktop/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/kevinW0W/iDevice-Modded/actions/workflows/ci.yml"><img src="https://github.com/kevinW0W/iDevice-Modded/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-blue" alt="GPL-3.0"></a>
   <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-0078d4" alt="Windows 10 | 11">
 </p>
 
 <!-- Add a screenshot or GIF here, e.g. docs/screenshot.png -->
 
-## What it does
+## Features
 
-- **HD mirror at up to 60 fps**: the iPhone's own screen stream, sharp text, low latency.
-- **Floating phone**: no window frame, just the phone (titanium rim and working side buttons) on your desktop. Drag it anywhere; clicks around it go to your desktop.
-- **Full control**:
-  - Click and drag to tap and swipe; the mouse wheel scrolls.
-  - Type on your PC keyboard. Alt works as ⌘ (Alt+Space opens Spotlight, Alt+C/V copies and pastes).
-  - Buttons for Home, App Switcher, Control Center, Notifications, Spotlight, Siri and Back.
-- **Sound**: the phone's audio plays on your PC, with an option to keep it quiet on the phone.
-- **Clipboard sync** both ways, text and images.
-- **Wireless**: after one wired start, it works over Wi-Fi with no cable and no admin rights.
-- **Desktop Mode**: extra-small text for denser, iPad-like layouts. The classic window also has a Big Screen mode that fills your monitor.
-- **Auto-rotate**, pinch zoom, screenshots at full resolution.
+- **Live screen mirroring**: stream your iPhone to Windows with touch input, keyboard support, and audio.
+- **Phone-shaped window**: use the full viewer or a movable floating phone with working side buttons.
+- **Choose the frame style**: the frame uses an iPhone 12-style notch by default. Select **Pro Notch** to switch to a Dynamic Island-style cutout; your choice is shared by the main and floating views and remembered.
+- **Desktop controls**: tap, swipe, scroll, type, and use shortcuts for Home, App Switcher, Control Center, Notifications, Spotlight, Siri, and more.
+- **Audio and clipboard**: play phone audio on the PC and sync text and images both ways.
+- **USB or Wi-Fi**: connect by cable first, then use a paired phone over the same network.
+- **Display tools**: auto-rotate, pinch zoom, screenshots, Desktop Mode, and a full-screen Big Screen view.
 
 Everything runs locally. Nothing is sent anywhere but between your PC and your phone.
 
@@ -47,23 +47,22 @@ Tested on an iPhone 16 Pro Max running iOS 27.0.1 and on Windows 11. Reports fro
 
 ## Install
 
-Open **PowerShell** (Start menu, type *PowerShell*) and paste:
+Download and run the latest **iDesktop-Setup** from the [GitHub Releases](https://github.com/kevinW0W/iDevice-Modded/releases) page. The installer uses a dark, iDesktop-branded setup UI and installs to **Program Files** (64-bit Windows; administrator permission required).
+
+It detects compatible 64-bit Python 3.13 installations and reuses one when available, creating an app-local virtual environment instead of installing Python again. Otherwise, it can install its bundled private Python 3.13 runtime. The packages in `requirements.txt` are bundled and installed offline without changing your system Python. The installer offers Start Menu and desktop shortcuts, plus optional Apple Devices installation from the Microsoft Store. Its framed iDesktop artwork is embedded and shown during installation. Uninstall iDesktop from **Settings > Apps** or the Start Menu; your settings and logs in `%APPDATA%\iDesktop` are kept.
+
+The existing no-admin PowerShell install remains available for development:
 
 ```powershell
-irm https://raw.githubusercontent.com/realxhabib/iDesktop/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/kevinW0W/iDevice-Modded/main/Others/install.ps1 | iex
 ```
 
-It installs per user, with no admin needed:
-- Python 3.13 (if you don't have 3.11-3.14)
-- The Apple Devices app (if no Apple driver is present)
-- iDesktop itself, in `%LOCALAPPDATA%\iDesktop`, with Start Menu and desktop shortcuts
-
-Run the same command again to update.
+The application source, build tools, and project files live in `Others`; the `iDesktop.bat` launcher stays at the repository root. To build the Windows installer from source, install Inno Setup 6 and 64-bit Python 3.13 on Windows, then run `python tools\build_installer.py` from `Others`. The build verifies Python's official installer checksum and puts the runtime and dependency wheels inside the generated `dist\iDesktop-Setup-<version>-x64.exe`. The **Windows installer** GitHub Actions workflow also builds it on demand and for version tags.
 
 ## First start
 
 1. Plug the iPhone in with a cable and unlock it.
-2. Open **iDesktop**.
+2. Open **iDesktop**. A laptop-style splash shows startup progress and recent log lines while it connects. If startup stops, the log stays visible for troubleshooting.
 3. Follow the prompts. They appear only the first time:
    - **Trust This Computer?** Tap *Trust* on the iPhone and enter your passcode.
    - **Developer Mode** (the HD mirror needs it): on the iPhone, open Settings > Privacy & Security > Developer Mode and turn it on. The phone restarts. Then tap *Turn On* and click *Retry*.
@@ -82,17 +81,18 @@ The phone then appears on your desktop. From now on, opening iDesktop goes strai
 | Home | Middle-click the screen, or Ctrl+H |
 | Move the phone | Drag its rim |
 | Controls | The round **⋯** button next to the phone, Ctrl+M, or right-click the rim |
+| Frame style | **Pro Notch** switches between the default iPhone 12-style notch and a Pro-style Dynamic Island; the setting is shared with floating mode |
 | Bigger / smaller | Ctrl+↑ / Ctrl+↓ |
 | Side buttons | Click (or hold) the buttons on the rim: action, volume, power |
 | Desktop Mode | Controls > Desktop Mode: extra-small, iPad-like text (click again to restore your text size) |
 | Screenshot | Ctrl+P, saved to Downloads at full resolution |
-| Keyboard | Just type. Alt = ⌘, Ctrl+L = lock, Ctrl+[ / ] = volume, Ctrl+S = Siri |
+| Keyboard | Just type. Alt = ⌘, Ctrl+L = lock, Ctrl+[ / ] = volume, Ctrl+S = Siri. Windows-key shortcuts work normally when iDesktop is out of focus; while it is focused, press Ctrl+Alt+Shift+Win to toggle Windows-key capture. |
 | On-screen keyboard | Ctrl+K or Controls > Show / hide keyboard. iOS hides it while a hardware keyboard (iDesktop) is attached; this toggles it back |
 | Classic window | Controls > Classic window (toolbar, accessibility and clipboard panels) |
 
 ### Floating controls
 
-Click the round **⋯** button next to the phone (or press Ctrl+M) for these buttons. Hover over any of them in the app for a reminder.
+The window is kept above other windows when iDesktop starts. Click the pushpin beside **⋯** to toggle always-on-top; your choice is saved for next time. The minus button minimizes. Click **⋯** (or press Ctrl+M) for the other controls, including **Pro Notch / Dynamic Island**. Hover over a button in the app for a reminder.
 
 | Button | What it does |
 |---|---|
@@ -107,8 +107,9 @@ Click the round **⋯** button next to the phone (or press Ctrl+M) for these but
 | **Zoom in / Zoom out** | A two-finger pinch at the centre of the screen. Ctrl + mouse wheel pinches where the mouse is. *Needs Automation.* |
 | **Screenshot** | Saves the phone's screen to Downloads at full resolution (Ctrl+P). |
 | **Desktop Mode** | Switches the phone to extra-small text, so apps fit more on screen, a bit like an iPad. Click again to restore your text size. |
-| **PC sound: on / off** | Plays (or stops playing) the phone's sound through this PC. Turning it on also drops the phone's volume to its lowest step. |
-| **Sound on PC only** | Turns the phone's volume down to its lowest step, so the PC plays at full volume while the phone stays almost silent. |
+| **PC sound: on / off** | Plays (or stops playing) the phone's sound through this PC. Turning it on also sets the iPhone volume to 0%. iOS may mute the mirrored PC audio at zero volume. |
+| **Sound on PC only** | Sets the iPhone volume to 0% without raising it again. iOS may also mute audio mirrored to this PC. |
+| **Pro Notch / Dynamic Island** | Switches the cosmetic phone frame between an iPhone 12-style notch and a Pro-style pill. It is available in both the main and floating views and does not change the actual iPhone display. |
 | **Dim phone** | Turns the phone's own screen down to minimum brightness. The mirror on your PC stays fully bright, so you can use the phone from the PC while it sits there almost dark. Click again (*Undim phone*) to bring it back. For near-black, also turn on Settings > Accessibility > Display & Text Size > *Reduce White Point*; you can put it on a triple-click with Accessibility Shortcut. |
 | **Automation: on / off** | Turns the [WebDriverAgent](#optional-extra-webdriveragent) helper on or off (see below). |
 | **Bigger / Smaller** | Resizes the phone (Ctrl+↑ / Ctrl+↓). |
@@ -151,7 +152,7 @@ During a phone or FaceTime call (or whenever an app is using the camera or micro
 
 ### Sound
 
-Sound comes through the PC automatically, from any app except Apple Music, whose protected audio iOS won't share. The phone keeps playing too, because iOS has no "PC only" switch. Turning **PC sound** on (or **Controls > Sound on PC only**) turns the phone's volume down to its lowest step, which keeps the PC copy at full volume. Volume 0 would mute both.
+Sound comes through the PC automatically, from any app except Apple Music, whose protected audio iOS won't share. The phone keeps playing too, because iOS has no "PC only" switch. Turning **PC sound** on (or **Controls > Sound on PC only**) sets the iPhone's volume to 0% and does not raise it afterward. iOS may also mute the audio mirrored to the PC at zero volume.
 
 ### Wireless
 
@@ -176,9 +177,14 @@ It builds `WebDriverAgent.ipa` and walks you through sideloading it with [Sidelo
 
 ## Troubleshooting
 
+For detailed, step-by-step fixes, start with the [Q_A.md troubleshooting guide](Q_A.md). If the issue
+continues, use the [bug report form](../.github/ISSUE_TEMPLATE/bug_report.yml) and review logs before
+sharing them.
+
 | Problem | Fix |
 |---|---|
 | "No iPhone found" | Use a data cable (not charge-only), unlock the phone, and make sure the Apple Devices app or iTunes is installed. |
+| Window title says "iDesktop (Lite mode)" and the old toolbar layout appears | This is the classic WebDriverAgent fallback, not a separate Lite edition. It appears when HD mirroring cannot start; see `%APPDATA%\iDesktop\logs\native.log` for the cause. If it says no iPhone on USB, reconnect the phone, unlock it, and tap **Trust This Computer**. |
 | Trust prompt never appears / "Don't Trust" was tapped | Unplug. On the iPhone: Settings > General > Transfer or Reset iPhone > Reset > *Reset Location & Privacy*. Plug in again. |
 | No Developer Mode setting on the iPhone | Start iDesktop once with the cable; that makes iOS show it. |
 | Black screen, "cannot decode the HD video" | Install [HEVC Video Extensions](https://apps.microsoft.com/detail/9NMZLZ57R3T7) and reopen iDesktop. |
@@ -204,8 +210,8 @@ iOS 27 includes CoreDevice's *DisplayService*, the same screen stream Xcode's de
 ## Development
 
 ```powershell
-git clone https://github.com/realxhabib/iDesktop.git
-cd iDesktop
+git clone https://github.com/kevinW0W/iDevice-Modded.git
+cd iDevice-Modded\Others
 py -3.13 -m venv .venv
 .venv\Scripts\pip install -r requirements.txt -r requirements-dev.txt
 .venv\Scripts\python -m idesktop
@@ -220,6 +226,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Credits
 
+- This community fork is based on [realxhabib/iDesktop](https://github.com/realxhabib/iDesktop). The upstream project and its contributors retain attribution for their original work; this fork preserves the GPL-3.0-or-later license.
 - [pymobiledevice3](https://github.com/doronz88/pymobiledevice3) by doronz88 and contributors (GPL-3.0) does all the talking to the phone; iDesktop wouldn't exist without it.
 - [Appium WebDriverAgent](https://github.com/appium/WebDriverAgent) (BSD-3-Clause) for the optional extra.
 - [PyAV](https://github.com/PyAV-Org/PyAV) / FFmpeg for audio decoding.

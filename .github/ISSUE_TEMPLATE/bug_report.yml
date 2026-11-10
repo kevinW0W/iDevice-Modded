@@ -1,45 +1,121 @@
-name: Bug report
-description: Something doesn't work
+name: Report a problem
+description: Report a reproducible bug or a feature that stopped working
+title: "[Bug]: "
 labels: [bug]
 body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report this. Clear steps and logs help us reproduce the problem.
+        Before posting, search existing issues and check [Q_A.md](../../Others/Q_A.md) for a known fix.
+
+        **Protect your privacy:** logs can include your iPhone name, device identifiers, local IP
+        addresses, usernames, and file paths. Review and redact sensitive details before attaching them.
+  - type: input
+    id: app_version
+    attributes:
+      label: iDesktop version
+      description: Find the version in Settings > Apps > Installed apps, or say if you built from source.
+      placeholder: "0.1.0, or source checkout at commit abc1234"
+    validations:
+      required: true
+  - type: dropdown
+    id: install_method
+    attributes:
+      label: How did you install or launch iDesktop?
+      options:
+        - Windows installer
+        - PowerShell installer
+        - Running from source
+        - Other or not sure
+    validations:
+      required: true
   - type: input
     id: iphone
     attributes:
       label: iPhone model and iOS version
-      placeholder: iPhone 16 Pro Max, iOS 27.0.1
+      description: Include the exact iOS version if you can (Settings > General > About).
+      placeholder: "iPhone 12, iOS 27.0.1"
     validations:
       required: true
   - type: input
     id: windows
     attributes:
       label: Windows version
-      placeholder: Windows 11 24H2
+      description: Include whether Windows 10 or 11, and the version/build if known.
+      placeholder: "Windows 11, version 25H2"
     validations:
       required: true
   - type: dropdown
     id: connection
     attributes:
-      label: Connection
-      options: [USB cable, Wi-Fi, Both]
+      label: How is the iPhone connected?
+      options:
+        - USB cable
+        - Wi-Fi
+        - USB and Wi-Fi
+        - Not connected yet
     validations:
       required: true
   - type: checkboxes
-    id: extras
+    id: setup
     attributes:
-      label: Setup
+      label: Which optional components are present?
+      description: Select every item that applies.
       options:
-        - label: WebDriverAgent extra installed
-        - label: Apple Devices app (not iTunes)
+        - label: Apple Devices app is installed
+        - label: iTunes is installed
+        - label: WebDriverAgent has been installed on the iPhone
+        - label: Microsoft HEVC Video Extensions are installed
   - type: textarea
-    id: what
+    id: steps
     attributes:
-      label: What happened?
-      description: What you did, what you expected, what happened instead.
+      label: Steps to reproduce
+      description: List the actions in order. If it only happens sometimes, say how often.
+      placeholder: |
+        1. Connect the unlocked iPhone to the PC with USB.
+        2. Start iDesktop from the Start Menu.
+        3. Click ...
     validations:
       required: true
   - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect to happen?
+      description: Describe the normal result you expected.
+      placeholder: "I expected the live iPhone screen to appear in the iDesktop window."
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened instead?
+      description: Include the exact error text and when it appeared. Screenshots or a short recording are useful.
+      placeholder: "The window opened, but the screen stayed black and showed ..."
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks already tried
+      description: Select any steps you have already tried; this avoids asking you to repeat them.
+      options:
+        - label: Unlocked the iPhone and accepted “Trust This Computer”
+        - label: Tried another USB data cable or USB port
+        - label: Restarted iDesktop and reconnected the iPhone
+        - label: Looked for a related answer in Q_A.md
+  - type: textarea
     id: logs
     attributes:
-      label: Logs
-      description: Paste or attach native.log and launcher.log from %APPDATA%\iDesktop\logs (redact your phone's name/UDID/IP if you like).
+      label: Relevant logs
+      description: |
+        Attach or paste the useful log files from `%APPDATA%\iDesktop\logs`, such as
+        `launcher.log`, `native.log`, `helper.log`, or `installer-dependencies.log`.
+        For installer failures, include the Inno Setup log or Python install log if available.
+        Please redact private identifiers, IP addresses, names, and usernames before sharing.
       render: text
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else that may help?
+      description: Add related issues, screenshots, whether this worked before, or other useful context.

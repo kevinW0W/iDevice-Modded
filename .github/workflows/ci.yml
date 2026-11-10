@@ -7,6 +7,9 @@ on:
 jobs:
   test:
     runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: Others
     strategy:
       fail-fast: false
       matrix:
@@ -24,9 +27,9 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt -r requirements-dev.txt
       - name: Compile
-        run: python -m compileall -q idesktop tools
+        run: python -m compileall -q idesktop installer tools
       - name: Lint (undefined names etc.)
-        run: python -m pyflakes idesktop tools
+        run: python -m pyflakes idesktop installer tools
       - name: Smoke test (code paths that normally need a phone)
         run: python tools/smoke_test.py
       - name: Viewer JavaScript syntax
@@ -34,7 +37,7 @@ jobs:
       - name: Installer scripts parse
         shell: pwsh
         run: |
-          foreach ($f in 'install.ps1', 'uninstall.ps1', 'extras/install-wda.ps1') {
+          foreach ($f in 'install.ps1', 'uninstall.ps1', 'extras/install-wda.ps1', 'installer/stop-processes.ps1') {
             $errs = $null
             [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $f), [ref]$null, [ref]$errs) | Out-Null
             if ($errs) { $errs | ForEach-Object { Write-Error "${f}: $_" }; exit 1 }

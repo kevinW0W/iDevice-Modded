@@ -15,8 +15,8 @@ Logs can contain your phone's name, UDID and local IP address. Redact them if yo
 ## Development setup
 
 ```powershell
-git clone https://github.com/realxhabib/iDesktop.git
-cd iDesktop
+git clone https://github.com/kevinW0W/iDevice-Modded.git
+cd iDevice-Modded\Others
 py -3.13 -m venv .venv
 .venv\Scripts\pip install -r requirements.txt -r requirements-dev.txt
 .venv\Scripts\python -m idesktop          # run from source

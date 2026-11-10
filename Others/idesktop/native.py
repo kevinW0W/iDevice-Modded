@@ -643,7 +643,13 @@ class Helper(BaseHTTPRequestHandler):
                     winshape.move_by(body.get("dx", 0), body.get("dy", 0))
                     return self._reply(200)
                 if self.path == "/window/cmd":
-                    winshape.command(str(body.get("cmd")))
+                    cmd = str(body.get("cmd"))
+                    if cmd == "pin-status":
+                        if not winshape.find_window():
+                            return self._reply(503, "viewer window not found")
+                        return self._reply(200, json.dumps({"pinned": winshape.pin_enabled()}))
+                    if not winshape.command(cmd):
+                        return self._reply(503, "viewer window not found")
                     return self._reply(200)
             except Exception as e:
                 return self._reply(503, f"{type(e).__name__}: {e}")
@@ -662,13 +668,12 @@ class Helper(BaseHTTPRequestHandler):
                 Helper._wda = None
                 return self._reply(503, "needs WebDriverAgent - an optional extra, see the README")
         if self.path == "/volume":
-            # "PC only" sound: the PC copy is taken before the phone's volume, but volume 0 mutes
-            # it too, so step the phone down to the lowest audible step (1).
+            # Keep this endpoint consistent with the viewer shortcut: zero volume may also mute
+            # audio mirrored from iOS, so never send a volume-up press after reaching zero.
             try:
                 w = self.wda()
                 for _ in range(17):
                     w._s("POST", "/wda/pressButton", {"name": "volumeDown"})
-                w._s("POST", "/wda/pressButton", {"name": "volumeUp"})
                 return self._reply(200)
             except Exception:
                 Helper._wda = None
