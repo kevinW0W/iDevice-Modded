@@ -353,31 +353,35 @@ check `helper.log` for runner startup errors.
 This is iOS's notice while the WebDriverAgent test runner is active. Turn Automation off in
 iDesktop or stop/quit the helper. Holding both iPhone volume buttons may also stop the test session.
 
-### 53. How do I install WebDriverAgent?
+### 53. Where can I find or download the WebDriverAgent IPA?
+
+Download the [unsigned WebDriverAgent 16.12.8 IPA](https://github.com/kevinW0W/iDevice-Modded/releases/download/v0.1.0/WebDriverAgent-16.12.8-unsigned.ipa) from the release, then install it on your iPhone with [Sideloadly](https://sideloadly.io) and your own Apple ID. It is intentionally unsigned: a generic signed IPA could be signed for someone else's Apple account or devices. The IPA is built from Appium's [official v16.12.8 runner package](https://github.com/appium/WebDriverAgent/releases/download/v16.12.8/WebDriverAgentRunner-Runner.zip). To generate it yourself instead, run `powershell -ExecutionPolicy Bypass -File "$env:LOCALAPPDATA\iDesktop\app\extras\install-wda.ps1"`; the resulting file is `%APPDATA%\iDesktop\WebDriverAgent.ipa`, and the script opens its folder.
+
+### 54. How do I install WebDriverAgent?
 
 Follow the [optional WebDriverAgent instructions](README.md#optional-extra-webdriveragent).
 Building and signing require Apple's developer tools and a valid provisioning setup; iDesktop does
 not bypass Apple's signing requirements. A free Apple ID may require more frequent re-signing.
 
-### 54. WebDriverAgent stopped working after several days.
+### 55. WebDriverAgent stopped working after several days.
 
 A free provisioning profile commonly expires after a short period. Rebuild and sideload using the
 instructions and signing tool you trust. Check the exact runner error in `helper.log`; do not share
 certificates, passwords, or provisioning-profile secrets in an issue.
 
-### 55. Lite mode works but is blurry or slow.
+### 56. Lite mode works but is blurry or slow.
 
 Lite mode is a lower-resolution fallback by design. Confirm Automation is running and close other
 apps using the phone camera or microphone. When the call ends, the HD stream should return
 automatically. Lite mode is not a setting to increase HD quality.
 
-### 56. The passcode keypad is missing during Automation setup.
+### 57. The passcode keypad is missing during Automation setup.
 
 iOS hides some system keypads from screen mirroring. Use the keypad overlay if it appears, or type
 the passcode from the PC keyboard and press Enter. Do not post a screenshot that reveals your
 passcode or notifications.
 
-### 57. A password field or its keyboard is hidden while mirroring.
+### 58. A password field or its keyboard is hidden while mirroring.
 
 iOS may conceal secure password-entry UI in the mirrored picture for privacy. iDesktop's custom
 keypad is only for the iPhone passcode; it does not provide an on-screen password keyboard.
@@ -389,38 +393,38 @@ may remain masked by design. Do not include passwords in logs, screenshots, or b
 
 ## Logs and reports
 
-### 58. Where are the logs?
+### 59. Where are the logs?
 
 Open `%APPDATA%\iDesktop\logs`. Common files include `launcher.log`, `native.log`, and
 `helper.log`; installer setup may also create Python or dependency logs. Logs may be overwritten
 when a new run starts, so copy the relevant file soon after reproducing the issue.
 
-### 59. Which log should I attach?
+### 60. Which log should I attach?
 
 For no-device and startup failures, attach `launcher.log`. For video, audio, or stream failures,
 attach `native.log`. For WebDriverAgent, window shape, or control-server issues, attach `helper.log`.
 For install failures, include the installer dependency/Python log and the setup's own log if present.
 
-### 60. How do I redact a log?
+### 61. How do I redact a log?
 
 Open it in a text editor and replace your Windows username, iPhone name, device identifiers, local
 IP addresses, and private paths with placeholders such as `[REDACTED]`. Keep timestamps, error
 messages, and surrounding context. Review screenshots for notifications and account details too.
 
-### 61. What makes a useful bug report?
+### 62. What makes a useful bug report?
 
 Use the [Report a problem form](../.github/ISSUE_TEMPLATE/bug_report.yml). Include exact versions,
 connection type, ordered reproduction steps, expected behavior, actual behavior, and relevant
 redacted logs. Search existing issues first and mention any troubleshooting steps already tried.
 
-### 62. How can I report that iDesktop works?
+### 63. How can I report that iDesktop works?
 
 Use the **It works on my setup** issue form. Include your iPhone/iOS, Windows/GPU, app version,
 connection type, and only the features you tested. These reports help build a compatibility record.
 
 ## Build and development
 
-### 63. How do I run iDesktop from source?
+### 64. How do I run iDesktop from source?
 
 1. Clone the repository and enter `Others`.
 2. Create a 64-bit Python 3.13 environment: `py -3.13 -m venv .venv`.
@@ -428,7 +432,7 @@ connection type, and only the features you tested. These reports help build a co
 4. Run `.venv\Scripts\python -m idesktop`.
 5. Connect an unlocked, trusted iPhone for device-dependent testing.
 
-### 64. How do I run the tests?
+### 65. How do I run the tests?
 
 From `Others`, run:
 
@@ -444,43 +448,43 @@ The smoke and end-to-end tests do not require a physical phone. The JavaScript c
 These checks passed on this checkout: compilation, lint, smoke tests, viewer JavaScript syntax, and
 the end-to-end tests. They do not verify behavior with every iPhone, Windows build, GPU, or network.
 
-### 65. How do I build the Windows installer?
+### 66. How do I build the Windows installer?
 
 On 64-bit Windows, install Python 3.13, Pillow, and Inno Setup 6. From `Others`, run
 `python tools\build_installer.py`. The script downloads the official Python installer, validates
 its SHA-256 checksum, builds an offline wheelhouse, and creates the setup executable in `dist`.
 
-### 66. Why is the build downloading files?
+### 67. Why is the build downloading files?
 
 The installer build needs the official Python runtime installer and dependency wheels. It verifies
 the Python installer checksum and packages the wheels for offline installation by end users. A
 successful build should leave the final setup executable in `Others\dist`.
 
-### 67. How do I debug the viewer layer?
+### 68. How do I debug the viewer layer?
 
 `idesktop/viewer_layer.py` is injected into the viewer and can be hot-reloaded by refreshing the
 page with F5. Run `python tools\check_viewer_js.py` after editing it. Browser-side errors are sent
 to the helper log; include the relevant redacted lines when reporting a regression.
 
-### 68. How do I enable Edge DevTools?
+### 69. How do I enable Edge DevTools?
 
 Set `IDESKTOP_DEVTOOLS=9333` before starting iDesktop, then use
 `python tools\cdp.py "<JavaScript expression>"`. Keep the debugging port private and disable it
 when finished; do not expose it on an untrusted network.
 
-### 69. Where should I report an issue with this modded fork?
+### 70. Where should I report an issue with this modded fork?
 
 Open an issue in the repository where you downloaded the build. Include the fork name and version,
 and state whether the issue also happens on upstream iDesktop. This helps maintainers distinguish
 fork-specific changes from upstream behavior.
 
-### 70. Where can I suggest a feature?
+### 71. Where can I suggest a feature?
 
 Search existing issues first, then open a feature request with the problem you are trying to solve,
 your proposed behavior, and any constraints. Explain whether it should apply to the normal viewer,
 floating view, or both.
 
-### 71. What should I do if these steps do not fix the problem?
+### 72. What should I do if these steps do not fix the problem?
 
 Stop before deleting pairing records, changing broad Windows permissions, or disabling security
 software. Gather the exact versions, reproduction steps, and redacted relevant logs, then submit a

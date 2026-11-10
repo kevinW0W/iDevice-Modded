@@ -173,7 +173,7 @@ To set it up:
 powershell -ExecutionPolicy Bypass -File "$env:LOCALAPPDATA\iDesktop\app\extras\install-wda.ps1"
 ```
 
-It builds `WebDriverAgent.ipa` and walks you through sideloading it with [Sideloadly](https://sideloadly.io). With a free Apple ID the app has to be re-sideloaded every 7 days; with a paid developer account, once a year.
+You can [download the unsigned WebDriverAgent 16.12.8 IPA](https://github.com/kevinW0W/iDevice-Modded/releases/download/v0.1.0/WebDriverAgent-16.12.8-unsigned.ipa) directly from the release and sign it with your own Apple ID in [Sideloadly](https://sideloadly.io). Or run the script above; it downloads Appium's [official WebDriverAgent runner package](https://github.com/appium/WebDriverAgent/releases/download/v16.12.8/WebDriverAgentRunner-Runner.zip), builds `WebDriverAgent.ipa` in `%APPDATA%\iDesktop`, and opens its location. The IPA is unsigned and must be sideloaded with your own Apple ID. With a free Apple ID the app has to be re-sideloaded every 7 days; with a paid developer account, once a year.
 
 ## Troubleshooting
 
