@@ -121,28 +121,46 @@ def find_browser() -> str | None:
     return shutil.which("msedge") or shutil.which("chrome")
 
 
+def _centered_window_bounds(
+    work_area: tuple[int, int, int, int],
+    scale: float = 1.0,
+    max_height: int = 900,
+    margin: int = 10,
+) -> tuple[int, int, int, int]:
+    left, top, right, bottom = (int(value / scale) for value in work_area)
+    work_width = max(1, right - left)
+    work_height = max(1, bottom - top)
+    height = min(max_height, max(1, work_height - 2 * margin),
+                 max(1, int((work_width - 2 * margin) / 0.52)))
+    width = max(1, int(height * 0.52))
+    x = left + (work_width - width) // 2
+    y = top + (work_height - height) // 2
+    return width, height, x, y
+
+
 def open_app_window(url: str) -> subprocess.Popen | None:
     exe = find_browser()
     if not exe:
         os.startfile(url)
         return None
     profile = CONFIG_DIR / "browser-profile"
-    # Fit the window to the usable screen (above the taskbar) at a phone-ish aspect.
-    h, top = 900, 10
+    # Center the phone-shaped app window in the usable desktop area, above the taskbar.
+    bounds = (0, 0, 1280, 900)
+    scale = 1.0
     try:
         from ctypes import wintypes
         rect = wintypes.RECT()
         ctypes.windll.user32.SystemParametersInfoW(0x30, 0, ctypes.byref(rect), 0)  # SPI_GETWORKAREA
+        bounds = (rect.left, rect.top, rect.right, rect.bottom)
         scale = ctypes.windll.shcore.GetScaleFactorForDevice(0) / 100 or 1
-        h = min(h, int((rect.bottom - rect.top) / scale) - 2 * top)
     except Exception:
         pass
-    w = int(h * 0.52)
+    w, h, x, y = _centered_window_bounds(bounds, scale)
     # A dedicated profile means this process owns the window: it exits when the window closes.
     extra = []
     if os.environ.get("IDESKTOP_DEVTOOLS"):  # debugging only: tools/cdp.py talks to this port
         extra.append(f"--remote-debugging-port={os.environ['IDESKTOP_DEVTOOLS']}")
-    return subprocess.Popen([exe, f"--app={url}", f"--window-size={w},{h}", f"--window-position=20,{top}",
+    return subprocess.Popen([exe, f"--app={url}", f"--window-size={w},{h}", f"--window-position={x},{y}",
                              f"--user-data-dir={profile}",
                              "--no-first-run", "--no-default-browser-check",
                              "--autoplay-policy=no-user-gesture-required",

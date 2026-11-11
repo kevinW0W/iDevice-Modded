@@ -66,6 +66,9 @@ def helpers_import():
     from idesktop import app, controller, device, wda
     assert device.CONFIG_DIR.name == "iDesktop"
     assert callable(controller.main) and hasattr(wda, "WDA")
+    assert app._centered_window_bounds((0, 0, 1920, 1080)) == (468, 900, 726, 90)
+    assert app._centered_window_bounds((0, 0, 2880, 1620), scale=1.5) == (468, 900, 726, 90)
+    assert app._centered_window_bounds((100, 50, 2020, 1130)) == (468, 900, 826, 140)
     native = __import__("idesktop.native", fromlist=["x"])
     assert (app.RECONNECT_EXIT, app.DISCONNECT_EXIT, app.RECONNECT_FLAG) ==         (native.RECONNECT_EXIT, native.DISCONNECT_EXIT, native.RECONNECT_FLAG)
 

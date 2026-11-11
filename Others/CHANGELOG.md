@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.6
+
+- The Edge app window now opens centered in the usable desktop area, accounting for display scaling and the taskbar.
+
 ## 0.1.5
 
 - Fixed wheel scrolling in landscape by rotating scroll gestures to match the visible screen direction.
