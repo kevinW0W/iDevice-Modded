@@ -41,6 +41,8 @@ application dependencies are included for offline installation.
 - Branded Windows installer with embedded artwork, purple progress, shortcuts, and uninstall.
 - Start Menu and desktop shortcuts target the root `iDesktop.bat` launcher installed in the app folder.
 - Startup splash with app preview, live startup log, and rounded progress indicator.
+- Centered, movable startup splash with hidden shortcut launch (no terminal popup).
+- Landscape wheel scrolling follows the on-screen direction.
 - Clearer issue templates and a detailed troubleshooting guide.
 - Improved phone-frame alignment and orientation-aware Pro Notch and power button in floating mode.
 - “Sound on PC only” now lowers phone volume without a final volume-up press. iOS may also mute

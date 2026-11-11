@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.5
+
+- Fixed wheel scrolling in landscape by rotating scroll gestures to match the visible screen direction.
+- The startup splash now opens centered, can be dragged by its header, and starts iDesktop without showing a console window.
+- Start Menu and desktop shortcuts launch the root `iDesktop.bat` through a hidden Windows Script Host helper so only the splash is shown.
+
 ## 0.1.4
 
 - Start Menu and desktop shortcuts now install the repository-root `iDesktop.bat` launcher, which launches the app directly and supports both checkout and installed layouts.

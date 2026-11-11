@@ -29,6 +29,31 @@ if missing:
     print("viewer cutout wiring missing: " + ", ".join(missing))
     sys.exit(1)
 
+wheel_helper = re.search(
+    r"  function wheelDeltaToDevice\(dx, dy, rotation\) \{.*?\n  \}",
+    viewer_layer.BODY_INJECT,
+    re.S,
+)
+if not wheel_helper:
+    print("viewer wheel-rotation helper is missing")
+    sys.exit(1)
+wheel_tests = """
+const assert = require('node:assert/strict');
+assert.deepEqual(wheelDeltaToDevice(0, 1, 0), [0, 1]);
+assert.deepEqual(wheelDeltaToDevice(0, 1, 90), [1, 0]);
+assert.deepEqual(wheelDeltaToDevice(0, 1, -90), [-1, 0]);
+assert.deepEqual(wheelDeltaToDevice(0, 1, 180), [0, -1]);
+assert.deepEqual(wheelDeltaToDevice(1, 0, 90), [0, -1]);
+"""
+result = subprocess.run(
+    ["node", "-e", wheel_helper.group(0) + "\n" + wheel_tests],
+    capture_output=True,
+    text=True,
+)
+if result.returncode:
+    print(result.stderr)
+    sys.exit(1)
+
 js = "\n;\n".join(re.findall(r"<script[^>]*>(.*?)</script>", viewer_layer.HEAD_INJECT + viewer_layer.BODY_INJECT, re.S))
 with tempfile.NamedTemporaryFile("w", suffix=".js", delete=False, encoding="utf-8") as f:
     f.write(js)

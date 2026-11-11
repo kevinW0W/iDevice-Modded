@@ -360,12 +360,20 @@ BODY_INJECT = """
   const WHEEL_BASE = 22, WHEEL_IDLE_MS = 90, WHEEL_REST_MS = 70;
   const LO = 4000, HI = 61500;
   let wheelDown = false, wheelResting = false, wx = 0, wy = 0, wheelIdle = 0;
+  function wheelDeltaToDevice(dx, dy, rotation) {
+    const deg = ((rotation % 360) + 360) % 360;
+    if (deg === 90) return [dy, dx ? -dx : 0];
+    if (deg === 270) return [dy ? -dy : 0, dx];
+    if (deg === 180) return [dx ? -dx : 0, dy ? -dy : 0];
+    return [dx, dy];
+  }
   function wheelScroll(e, p) {
     if (activePointer !== null) return;          // a real mouse drag is in progress
     const unit = e.deltaMode === 1 ? 40 : e.deltaMode === 2 ? 800 : 1;   // lines / pages -> px
     let dx = (e.shiftKey ? e.deltaY : e.deltaX) * unit, dy = (e.shiftKey ? 0 : e.deltaY) * unit;
     const gain = WHEEL_BASE * wheelSpeed;
     dx = -dx * gain; dy = -dy * gain;
+    [dx, dy] = wheelDeltaToDevice(dx, dy, visualRotation);
     if (!wheelDown && wheelResting) { wheelResting = false; wheelDown = true; }   // resumed mid-rest: same finger
     if (!wheelDown) {
       // Start where the mouse is, but leave room to travel in the scroll direction.

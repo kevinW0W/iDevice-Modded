@@ -138,16 +138,23 @@ def _draw_pill(canvas: tk.Canvas, x0: float, y0: float, x1: float, y1: float, co
     canvas.create_oval(x1 - 2 * radius, y0, x1, y1, fill=color, outline="")
 
 
+def _center_position(screen_width: int, screen_height: int) -> tuple[int, int]:
+    return (screen_width - SPLASH_WIDTH) // 2, (screen_height - SPLASH_HEIGHT) // 2
+
+
 def main() -> None:
     root = tk.Tk()
     root.title(TITLE + " startup")
     root.configure(bg="#080f21")
     root.resizable(False, False)
     root.overrideredirect(True)
-    root.attributes("-topmost", True)
-    x = (root.winfo_screenwidth() - SPLASH_WIDTH) // 2
-    y = (root.winfo_screenheight() - SPLASH_HEIGHT) // 2
+    root.withdraw()
+    root.update_idletasks()
+    x, y = _center_position(root.winfo_screenwidth(), root.winfo_screenheight())
     root.geometry(f"{SPLASH_WIDTH}x{SPLASH_HEIGHT}+{x}+{y}")
+    root.deiconify()
+    root.update_idletasks()
+    root.attributes("-topmost", True)
 
     panel_x, panel_y, panel_width, panel_height = 54, 35, 792, 520
     canvas = tk.Canvas(root, width=SPLASH_WIDTH, height=SPLASH_HEIGHT,
@@ -165,13 +172,30 @@ def main() -> None:
 
     header = tk.Frame(panel, bg="#171e2b")
     header.place(x=24, y=16, width=panel_width - 48, height=38)
-    tk.Label(header, text="iDesktop Setup", font=("Segoe UI", 10, "bold"),
-             fg="#dce8ff", bg="#171e2b").pack(side="left")
+    header_title = tk.Label(header, text="iDesktop Setup", font=("Segoe UI", 10, "bold"),
+                            fg="#dce8ff", bg="#171e2b", cursor="fleur")
+    header_title.pack(side="left")
     close_button = tk.Button(header, text="×", command=root.destroy, borderwidth=0,
                              font=("Segoe UI", 16), fg="#b8c5db", bg="#171e2b",
                              activebackground="#293449", activeforeground="white",
                              cursor="hand2", relief="flat")
     close_button.pack(side="right", padx=(0, 3))
+
+    drag_origin = (0, 0, 0, 0)
+
+    def begin_drag(event: tk.Event) -> None:
+        nonlocal drag_origin
+        drag_origin = (event.x_root, event.y_root, root.winfo_x(), root.winfo_y())
+
+    def move_splash(event: tk.Event) -> None:
+        pointer_x, pointer_y, window_x, window_y = drag_origin
+        x = window_x + event.x_root - pointer_x
+        y = window_y + event.y_root - pointer_y
+        root.geometry(f"+{x}+{y}")
+
+    for drag_widget in (header, header_title):
+        drag_widget.bind("<ButtonPress-1>", begin_drag)
+        drag_widget.bind("<B1-Motion>", move_splash)
 
     title = tk.Label(panel, text="Getting iDesktop ready", font=("Segoe UI", 21, "bold"),
                      fg="#f5f7fc", bg="#171e2b")
@@ -263,8 +287,9 @@ def main() -> None:
         root.after(32, animate_progress)
 
     try:
+        no_window = subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
         app = subprocess.Popen([sys.executable, "-m", "idesktop", *sys.argv[1:]],
-                               cwd=project_root)
+                               cwd=project_root, creationflags=no_window)
     except OSError as exc:
         app = None
         startup_stopped = True

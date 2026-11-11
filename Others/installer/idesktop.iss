@@ -1,5 +1,5 @@
 #ifndef AppVersion
-  #define AppVersion "0.1.4"
+  #define AppVersion "0.1.5"
 #endif
 #ifndef BuildDir
   #define BuildDir "..\build\installer"
@@ -68,13 +68,14 @@ Source: "{#ProjectRoot}\requirements.txt"; DestDir: "{app}"; Flags: ignoreversio
 Source: "{#ProjectRoot}\LICENSE"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#ProjectRoot}\README.md"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#ProjectRoot}\..\iDesktop.bat"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#ProjectRoot}\..\iDesktop.vbs"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#ProjectRoot}\extras\*"; DestDir: "{app}\extras"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "stop-processes.ps1"; DestDir: "{app}\installer"; Flags: ignoreversion
 
 [Icons]
-Name: "{autoprograms}\iDesktop"; Filename: "{app}\iDesktop.bat"; WorkingDir: "{app}"; IconFilename: "{app}\assets\idesktop.ico"; Comment: "Mirror and control your iPhone"; Check: CreateStartMenuShortcuts
+Name: "{autoprograms}\iDesktop"; Filename: "{sys}\wscript.exe"; Parameters: """{app}\iDesktop.vbs"""; WorkingDir: "{app}"; IconFilename: "{app}\assets\idesktop.ico"; Comment: "Mirror and control your iPhone"; Check: CreateStartMenuShortcuts
 Name: "{autoprograms}\Uninstall iDesktop"; Filename: "{uninstallexe}"; WorkingDir: "{app}"; IconFilename: "{app}\assets\idesktop.ico"; Check: CreateStartMenuShortcuts
-Name: "{autodesktop}\iDesktop"; Filename: "{app}\iDesktop.bat"; WorkingDir: "{app}"; IconFilename: "{app}\assets\idesktop.ico"; Check: CreateDesktopShortcut
+Name: "{autodesktop}\iDesktop"; Filename: "{sys}\wscript.exe"; Parameters: """{app}\iDesktop.vbs"""; WorkingDir: "{app}"; IconFilename: "{app}\assets\idesktop.ico"; Check: CreateDesktopShortcut
 
 [UninstallRun]
 Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -NonInteractive -ExecutionPolicy Bypass -File ""{app}\installer\stop-processes.ps1"" -InstallRoot ""{app}"""; Flags: runhidden waituntilterminated; RunOnceId: "StopiDesktopProcesses"
