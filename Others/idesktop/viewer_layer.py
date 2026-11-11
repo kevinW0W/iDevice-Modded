@@ -52,7 +52,6 @@ try { for (const s of ['left','right']) if (!localStorage.getItem('tray-'+s)) lo
  #ext-notch { position:absolute; z-index:4; display:none; pointer-events:none; background:#000 }
  body.ext-notch-visible #device-frame #ext-notch,
  body.ext-compact.ext-notch-visible #ext-bezel #ext-notch { display:block }
- #ext-notch.standard { border-radius:0 0 48% 48% / 0 0 30% 30% }
  #ext-notch.pro { border-radius:999px; box-shadow:0 1px 2px #0008 }
  body.ext-compact #ext-phone .hw { position:absolute !important; display:block !important; margin:0 !important;
    padding:0 !important; border:0 !important; min-width:0 !important; transform:none !important;
@@ -587,16 +586,12 @@ BODY_INJECT = """
   const deviceFrame = document.getElementById('device-frame');
   const frameNotch = document.createElement('div'); frameNotch.id = 'ext-notch';
   deviceFrame.appendChild(frameNotch);
-  let notchMode = stored('ext-notch-mode');
-  if (!['standard', 'pro', 'off'].includes(notchMode))
-    notchMode = stored('ext-pro-notch') === '1' ? 'pro' : 'standard';
+  let proNotch = stored('ext-pro-notch') === '1' || stored('ext-notch-mode') === 'pro';
   let notchButton = null;
-  const notchLabel = () => notchMode === 'pro' ? 'Pro Notch: on'
-    : notchMode === 'off' ? 'Notch: hidden' : 'Notch: iPhone 12';
-  const notchTip = () => 'Cycle the mirror cutout: iPhone 12 notch, Pro Dynamic Island, or hidden';
+  const notchLabel = () => 'Pro Notch: ' + (proNotch ? 'on' : 'off');
+  const notchTip = () => 'Show or hide the Pro Dynamic Island over the mirrored screen';
   function updateNotchState() {
-    document.body.classList.toggle('ext-notch-visible', notchMode !== 'off');
-    document.body.classList.toggle('ext-pro-notch', notchMode === 'pro');
+    document.body.classList.toggle('ext-notch-visible', proNotch);
     if (notchButton) {
       notchButton.textContent = notchLabel();
       notchButton.title = notchTip();
@@ -606,25 +601,41 @@ BODY_INJECT = """
   updateNotchState();
   function positionNotch() {
     if (!canvas.offsetWidth || !canvas.offsetHeight) return;
-    const proNotch = notchMode === 'pro';
-    const width = Math.round(canvas.offsetWidth * (proNotch ? 0.32 : 0.38));
-    const height = proNotch
-      ? Math.max(14, Math.round(canvas.offsetWidth * 0.085))
-      : Math.max(18, Math.round(canvas.offsetWidth * 0.078));
-    const top = canvas.offsetTop + (proNotch ? Math.max(5, Math.round(canvas.offsetWidth * 0.018)) : 0);
+    const rotation = ((visualRotation % 360) + 360) % 360;
+    const shortSide = Math.min(canvas.offsetWidth, canvas.offsetHeight);
+    const length = Math.round(shortSide * 0.32);
+    const thickness = Math.max(14, Math.round(shortSide * 0.085));
+    const inset = Math.max(2, Math.round(shortSide * 0.012));
+    let left, top, width, height;
+    if (rotation === 90) {
+      left = canvas.offsetLeft + canvas.offsetWidth - thickness - inset;
+      top = canvas.offsetTop + Math.round((canvas.offsetHeight - length) / 2);
+      width = thickness; height = length;
+    } else if (rotation === 270) {
+      left = canvas.offsetLeft + inset;
+      top = canvas.offsetTop + Math.round((canvas.offsetHeight - length) / 2);
+      width = thickness; height = length;
+    } else if (rotation === 180) {
+      left = canvas.offsetLeft + Math.round((canvas.offsetWidth - length) / 2);
+      top = canvas.offsetTop + canvas.offsetHeight - thickness - inset;
+      width = length; height = thickness;
+    } else {
+      left = canvas.offsetLeft + Math.round((canvas.offsetWidth - length) / 2);
+      top = canvas.offsetTop + inset;
+      width = length; height = thickness;
+    }
     Object.assign(frameNotch.style, {
-      left: Math.round(canvas.offsetLeft + (canvas.offsetWidth - width) / 2) + 'px',
-      top: top + 'px',
+      left: Math.round(left) + 'px',
+      top: Math.round(top) + 'px',
       width: width + 'px',
       height: height + 'px',
     });
-    frameNotch.classList.toggle('pro', proNotch);
-    frameNotch.classList.toggle('standard', notchMode === 'standard');
+    frameNotch.classList.add('pro');
   }
-  function cycleNotchMode() {
-    notchMode = ({standard: 'pro', pro: 'off', off: 'standard'})[notchMode];
-    store('ext-notch-mode', notchMode);
-    store('ext-pro-notch', notchMode === 'pro' ? '1' : '0');
+  function toggleProNotch() {
+    proNotch = !proNotch;
+    store('ext-pro-notch', proNotch ? '1' : '0');
+    store('ext-notch-mode');
     updateNotchState();
     positionNotch();
     refreshLabels();
@@ -713,7 +724,7 @@ BODY_INJECT = """
      ['search', 'Spotlight', () => gestures['Spotlight']()],
      ['siri', 'Siri', upClick('#bottom-row [data-btn="siri"]')],
      ['kbd', 'Show / hide keyboard', () => toggleKeyboard()],
-     ['notch', () => notchLabel(), cycleNotchMode]],
+     ['notch', () => notchLabel(), toggleProNotch]],
     [['zin', 'Zoom in', () => pinch(0.5, 0.5, 1.8)],
      ['zout', 'Zoom out', () => pinch(0.5, 0.5, 0.5)],
      ['shot', 'Screenshot', () => fullResShot({preventDefault() {}, stopImmediatePropagation() {}})],
@@ -1106,7 +1117,7 @@ BODY_INJECT = """
       p.el.querySelector('span').textContent = typeof p.label === 'function' ? p.label() : p.label;
       if (p.icon === 'sound') p.el.classList.toggle('on', soundOn());
       if (p.icon === 'notch') {
-        p.el.classList.toggle('on', notchMode !== 'off');
+        p.el.classList.toggle('on', proNotch);
         p.el.title = notchTip();
       }
       if (p.icon === 'desk') p.el.classList.toggle('on', deskOn);
@@ -1150,7 +1161,7 @@ BODY_INJECT = """
     b.addEventListener('click', () => { store('ext-compact', '1'); window.fitCanvasToViewport(); }); row.appendChild(b); }
   notchButton = document.createElement('button');
   notchButton.className = 'btn';
-  notchButton.addEventListener('click', cycleNotchMode);
+  notchButton.addEventListener('click', toggleProNotch);
   row.appendChild(notchButton);
   updateNotchState();
 
@@ -1236,7 +1247,7 @@ BODY_INJECT = """
     Object.assign(toastEl.style, {left: (X + pw / 2) + 'px', top: (OY + ph - 70) + 'px', bottom: 'auto'});
     const shapes = [{x: X, y: OY, w: pw, h: ph, r: R}];
     if (!bigFloat) shapes.push({x: Math.round(X + (pw - hbW) / 2), y: OY + ph + HOMEBAR_GAP, w: hbW, h: HOMEBAR_H, r: 10});
-    // Side buttons on the long edges (portrait: left = action/volume, right = power + Camera Control).
+    // Keep hardware buttons attached to their physical edges as the mirror rotates.
     const side = [];
     for (const hw of extPhone.querySelectorAll('.hw')) {
       const pos = parseFloat(hw.style.getPropertyValue('--pos')) / 100, len = parseFloat(hw.style.getPropertyValue('--len')) / 100;
@@ -1244,11 +1255,28 @@ BODY_INJECT = """
     }
     side.push([camCtl, true, 0.53, 0.085]);
     for (const [el, right, pos, len] of side) {
-      if (sideways || !(pos >= 0)) { el.style.display = 'none'; continue; }
+      if (!(pos >= 0)) { el.style.display = 'none'; continue; }
       el.style.display = '';
-      const bx = right ? pw - 1 : -3, by = Math.round(ph * pos), bh = Math.round(ph * len);
-      Object.assign(el.style, {left: bx + 'px', top: by + 'px', width: '4px', height: bh + 'px'});
-      shapes.push({x: X + bx, y: OY + by, w: 4, h: bh, r: 2});
+      const span = sideways ? pw : ph;
+      const segment = Math.max(4, Math.round(span * len));
+      const along = Math.round(span * pos);
+      let bx, by, bw, bh;
+      if (visualRotation === 90) {
+        bx = Math.max(0, Math.min(pw - segment, pw - along - segment));
+        by = right ? ph - 1 : -3;
+        bw = segment; bh = 4;
+      } else if (visualRotation === -90) {
+        bx = Math.max(0, Math.min(pw - segment, along));
+        by = right ? -3 : ph - 1;
+        bw = segment; bh = 4;
+      } else {
+        const flipped = visualRotation === 180;
+        bx = (right !== flipped) ? pw - 1 : -3;
+        by = Math.max(0, Math.min(ph - segment, flipped ? ph - along - segment : along));
+        bw = 4; bh = segment;
+      }
+      Object.assign(el.style, {left: bx + 'px', top: by + 'px', width: bw + 'px', height: bh + 'px'});
+      shapes.push({x: X + bx, y: OY + by, w: bw, h: bh, r: 2});
     }
     // Floating controls beside the phone: on the right if they fit on screen, else on the left;
     // a second column when the list is taller than the space below the phone's top.

@@ -10,12 +10,19 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from idesktop import viewer_layer  # noqa: E402
 
 cutout_checks = {
-    "three cutout modes": "['standard', 'pro', 'off'].includes(notchMode)" in viewer_layer.BODY_INJECT,
+    "binary Pro Notch label": "'Pro Notch: ' + (proNotch ? 'on' : 'off')" in viewer_layer.BODY_INJECT,
+    "no three-state cutout cycle": "cycleNotchMode" not in viewer_layer.BODY_INJECT,
     "cutout shown over normal mirror": "body.ext-notch-visible #device-frame #ext-notch" in viewer_layer.HEAD_INJECT,
     "cutout follows floating canvas": (
         "moveInto(canvas, extBezel); moveInto(frameNotch, extBezel);" in viewer_layer.BODY_INJECT
     ),
-    "floating cutout control": "['notch', () => notchLabel(), cycleNotchMode]" in viewer_layer.BODY_INJECT,
+    "floating cutout toggle": (
+        "['notch', () => notchLabel(), toggleProNotch]" in viewer_layer.BODY_INJECT
+        and "notchButton.addEventListener('click', toggleProNotch)" in viewer_layer.BODY_INJECT
+    ),
+    "rotated cutout placement": "const rotation = ((visualRotation % 360) + 360) % 360" in viewer_layer.BODY_INJECT,
+    "rotated side buttons": "if (visualRotation === 90)" in viewer_layer.BODY_INJECT,
+    "power button remains visible in landscape": "if (sideways || !(pos >= 0))" not in viewer_layer.BODY_INJECT,
 }
 missing = [name for name, present in cutout_checks.items() if not present]
 if missing:

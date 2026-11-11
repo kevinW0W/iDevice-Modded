@@ -1,9 +1,15 @@
 # Changelog
 
+## 0.1.3
+
+- Changed Pro Notch to a clear on/off toggle in the normal and floating controls.
+- Pro Notch now follows the mirrored display as it rotates.
+- Floating power and volume buttons now rotate with the phone instead of disappearing in landscape.
+
 ## 0.1.2
 
 - Fixed the Pro Dynamic Island overlay so it stays aligned over the mirrored screen in both normal and floating views.
-- Added a three-state cutout control for the iPhone 12 notch, Pro Dynamic Island, or no cutout; the selection is remembered and available in floating controls.
+- Added a saved cutout selector in the normal and floating controls.
 - Resized the Pro Dynamic Island to better match the proportions of the real cutout.
 
 ## 0.1.1

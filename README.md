@@ -33,7 +33,7 @@ application dependencies are included for offline installation.
 - Live iPhone screen mirroring and mouse, touch, and keyboard controls.
 - USB connection, with Wi-Fi available after pairing.
 - Floating phone window, full-screen view, screenshots, audio, and clipboard sync.
-- iPhone 12-style notch and Dynamic Island-style mirror overlays, with a hide option.
+- Optional Pro Dynamic Island overlay with an on/off toggle.
 - Optional WebDriverAgent support for automation features and Lite-mode fallback where supported.
 
 ## What's added and improved
@@ -42,7 +42,7 @@ application dependencies are included for offline installation.
 - Start Menu and desktop shortcuts launch the installed `iDesktop.bat` entry point.
 - Startup splash with app preview, live startup log, and rounded progress indicator.
 - Clearer issue templates and a detailed troubleshooting guide.
-- Improved phone-frame alignment and remembered notch selection, with a notch overlay that stays aligned in floating mode.
+- Improved phone-frame alignment and orientation-aware Pro Notch and power button in floating mode.
 - “Sound on PC only” now lowers phone volume without a final volume-up press. iOS may also mute
   mirrored PC audio when the phone volume is zero.
 

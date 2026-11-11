@@ -25,7 +25,7 @@
 
 - **Live screen mirroring**: stream your iPhone to Windows with touch input, keyboard support, and audio.
 - **Phone-shaped window**: use the full viewer or a movable floating phone with working side buttons.
-- **Choose the mirror cutout**: cycle between the iPhone 12 notch, a larger Pro Dynamic Island, and hidden. It overlays the mirror, works with or without the outer frame, and stays in place in floating mode.
+- **Pro Notch toggle**: turn the Dynamic Island overlay on or off. It follows the live mirror when the phone rotates and in floating mode.
 - **Desktop controls**: tap, swipe, scroll, type, and use shortcuts for Home, App Switcher, Control Center, Notifications, Spotlight, Siri, and more.
 - **Audio and clipboard**: play phone audio on the PC and sync text and images both ways.
 - **USB or Wi-Fi**: connect by cable first, then use a paired phone over the same network.
@@ -92,7 +92,7 @@ The phone then appears on your desktop. From now on, opening iDesktop goes strai
 
 ### Floating controls
 
-The window is kept above other windows when iDesktop starts. Click the pushpin beside **⋯** to toggle always-on-top; your choice is saved for next time. The minus button minimizes. Click **⋯** (or press Ctrl+M) for the other controls, including the mirror-cutout selector. Hover over a button in the app for a reminder.
+The window is kept above other windows when iDesktop starts. Click the pushpin beside **⋯** to toggle always-on-top; your choice is saved for next time. The minus button minimizes. Click **⋯** (or press Ctrl+M) for the other controls, including **Pro Notch: on/off**. Hover over a button in the app for a reminder.
 
 | Button | What it does |
 |---|---|
@@ -109,7 +109,7 @@ The window is kept above other windows when iDesktop starts. Click the pushpin b
 | **Desktop Mode** | Switches the phone to extra-small text, so apps fit more on screen, a bit like an iPad. Click again to restore your text size. |
 | **PC sound: on / off** | Plays (or stops playing) the phone's sound through this PC. Turning it on also sets the iPhone volume to 0%. iOS may mute the mirrored PC audio at zero volume. |
 | **Sound on PC only** | Sets the iPhone volume to 0% without raising it again. iOS may also mute audio mirrored to this PC. |
-| **Mirror cutout** | Cycles the overlay between an iPhone 12-style notch, a Pro-style Dynamic Island, and hidden. It appears over the mirrored screen in normal and floating views; it does not change the iPhone display or saved screenshots. |
+| **Pro Notch: on/off** | Shows or hides the Pro-style Dynamic Island overlay. It follows the mirrored screen's orientation in normal and floating views; it does not change the iPhone display or saved screenshots. |
 | **Dim phone** | Turns the phone's own screen down to minimum brightness. The mirror on your PC stays fully bright, so you can use the phone from the PC while it sits there almost dark. Click again (*Undim phone*) to bring it back. For near-black, also turn on Settings > Accessibility > Display & Text Size > *Reduce White Point*; you can put it on a triple-click with Accessibility Shortcut. |
 | **Automation: on / off** | Turns the [WebDriverAgent](#optional-extra-webdriveragent) helper on or off (see below). |
 | **Bigger / Smaller** | Resizes the phone (Ctrl+↑ / Ctrl+↓). |
