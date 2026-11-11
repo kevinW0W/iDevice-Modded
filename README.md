@@ -62,6 +62,12 @@ locally.
 - [Report a bug](https://github.com/kevinW0W/iDevice-Modded/issues/new?template=bug_report.yml)
 - [Share a working setup](https://github.com/kevinW0W/iDevice-Modded/issues/new?template=works_on_my_setup.yml)
 
+## Contributors
+
+- [@kevinW0W](https://github.com/kevinW0W) — fork maintainer.
+- [@realxhabib](https://github.com/realxhabib) and the original iDesktop contributors — upstream project and ongoing credit for its work.
+- [GitHub Copilot](https://github.com/features/copilot) — AI coding assistance, credited in co-authored commits.
+
 ## Attribution and license
 
 This is a community fork of [realxhabib/iDesktop](https://github.com/realxhabib/iDesktop).
