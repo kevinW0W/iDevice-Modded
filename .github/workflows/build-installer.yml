@@ -49,7 +49,29 @@ jobs:
           if ($env:GITHUB_REF_NAME -ne "v$version") {
             throw "Release tag $env:GITHUB_REF_NAME must match pyproject.toml version v$version."
           }
+          $releaseNotes = @"
+          ![iDevice Modded](https://raw.githubusercontent.com/kevinW0W/iDevice-Modded/v$version/Others/assets/release-banner.png)
+
+          # iDevice Modded $version
+
+          ## Downloads
+          - **Windows x64 installer:** [iDesktop-Setup-$version-x64.exe](https://github.com/kevinW0W/iDevice-Modded/releases/download/v$version/iDesktop-Setup-$version-x64.exe)
+          - **Optional WebDriverAgent:** [Unsigned IPA](https://github.com/kevinW0W/iDevice-Modded/releases/download/v0.1.1/WebDriverAgent-16.12.8-unsigned.ipa) · [BSD-3-Clause license](https://github.com/kevinW0W/iDevice-Modded/releases/download/v0.1.1/WebDriverAgent-BSD-3-Clause-LICENSE.txt)
+
+          ## What's fixed
+          - The floating mirror stays minimized until you restore it; periodic layout updates no longer bring the window back.
+
+          ## Features
+          - iPhone mirroring and controls over USB or paired Wi-Fi.
+          - Centered movable startup splash, hidden shortcut launch, and landscape-aware scrolling.
+          - Floating view, screenshots, clipboard sync, and optional WebDriverAgent automation.
+          - Pro Notch on/off toggle with orientation-aware floating controls.
+
+          **Requirements:** 64-bit Windows 10 (1809+) or Windows 11; HD mirroring requires iOS 27+ and HEVC decoding. See the [full guide](https://github.com/kevinW0W/iDevice-Modded/blob/v$version/Others/README.md) and [troubleshooting guide](https://github.com/kevinW0W/iDevice-Modded/blob/v$version/Others/Q_A.md).
+
+          This is an attributed GPL-3.0-or-later fork of [realxhabib/iDesktop](https://github.com/realxhabib/iDesktop).
+          "@
           gh release create "$env:GITHUB_REF_NAME" "dist\iDesktop-Setup-$version-x64.exe" `
-            --title "iDesktop $version" --generate-notes
+            --title "iDevice Modded $version" --notes $releaseNotes
         env:
           GH_TOKEN: ${{ github.token }}
