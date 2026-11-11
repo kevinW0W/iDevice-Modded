@@ -201,6 +201,8 @@ def _apply(spec: dict) -> dict:
         hwnd = find_window()
         if not hwnd:
             raise RuntimeError("viewer window not found")
+        if user32.IsIconic(hwnd):
+            return {"ok": True, "deferred": True}
         if spec.get("off"):
             _set_backdrop(hwnd, 2)
             user32.SetWindowRgn(hwnd, None, True)

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.7
+
+- Fixed the floating mirror restoring itself about 10 seconds after it was minimized; periodic layout updates are now deferred while the window is minimized.
+
 ## 0.1.6
 
 - The Edge app window now opens centered in the usable desktop area, accounting for display scaling and the taskbar.

@@ -36,6 +36,16 @@ def winshape_without_window():
     winshape.command("min")
 
 
+def winshape_minimized_layout_is_deferred():
+    from unittest.mock import patch
+
+    from idesktop import winshape
+    with patch.object(winshape, "find_window", return_value=1), \
+            patch.object(winshape.user32, "IsIconic", return_value=True):
+        result = winshape._apply({"dpr": 1, "maximize": True, "shapes": []})
+    assert result == {"ok": True, "deferred": True}
+
+
 def native_patches_apply():
     from pymobiledevice3.remote.core_device import screen_stream as ss
 
@@ -122,6 +132,7 @@ def splash_art_renders():
 
 
 check("winshape without a window", winshape_without_window)
+check("minimized window layout is deferred", winshape_minimized_layout_is_deferred)
 check("native patches apply", native_patches_apply)
 check("audio decoder opens", audio_decoder_opens)
 check("modules import", helpers_import)

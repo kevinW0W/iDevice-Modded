@@ -43,6 +43,7 @@ application dependencies are included for offline installation.
 - Startup splash with app preview, live startup log, and rounded progress indicator.
 - Centered, movable startup splash with hidden shortcut launch (no terminal popup).
 - Edge app window opens centered in the usable desktop area.
+- Floating mirror stays minimized until you restore it.
 - Landscape wheel scrolling follows the on-screen direction.
 - Clearer issue templates and a detailed troubleshooting guide.
 - Improved phone-frame alignment and orientation-aware Pro Notch and power button in floating mode.
