@@ -83,10 +83,14 @@ if ($local) {
 if ((Resolve-Path $src).Path -ne $App) {
     if (Test-Path $App) { Remove-Item $App -Recurse -Force }
     New-Item -ItemType Directory -Force $App | Out-Null
-    foreach ($item in 'idesktop', 'assets', 'tools', 'requirements.txt', 'LICENSE', 'README.md', 'extras', 'uninstall.ps1', 'iDesktop.bat') {
+    foreach ($item in 'idesktop', 'assets', 'tools', 'requirements.txt', 'LICENSE', 'README.md', 'extras', 'uninstall.ps1') {
         $p = Join-Path $src $item
         if (Test-Path $p) { Copy-Item $p $App -Recurse -Force }
     }
+    $launcher = Join-Path $src '..\iDesktop.bat'
+    if (-not (Test-Path $launcher)) { $launcher = Join-Path $src 'iDesktop.bat' }
+    if (-not (Test-Path $launcher)) { Fail "The root iDesktop.bat launcher is missing from '$src'." }
+    Copy-Item $launcher (Join-Path $App 'iDesktop.bat') -Force
 }
 if (-not $local) { Remove-Item (Split-Path $src) -Recurse -Force -ErrorAction SilentlyContinue }
 

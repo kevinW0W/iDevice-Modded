@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.4
+
+- Start Menu and desktop shortcuts now install the repository-root `iDesktop.bat` launcher, which launches the app directly and supports both checkout and installed layouts.
+
 ## 0.1.3
 
 - Changed Pro Notch to a clear on/off toggle in the normal and floating controls.

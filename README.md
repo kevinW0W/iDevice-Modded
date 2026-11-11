@@ -39,7 +39,7 @@ application dependencies are included for offline installation.
 ## What's added and improved
 
 - Branded Windows installer with embedded artwork, purple progress, shortcuts, and uninstall.
-- Start Menu and desktop shortcuts launch the installed `iDesktop.bat` entry point.
+- Start Menu and desktop shortcuts target the root `iDesktop.bat` launcher installed in the app folder.
 - Startup splash with app preview, live startup log, and rounded progress indicator.
 - Clearer issue templates and a detailed troubleshooting guide.
 - Improved phone-frame alignment and orientation-aware Pro Notch and power button in floating mode.

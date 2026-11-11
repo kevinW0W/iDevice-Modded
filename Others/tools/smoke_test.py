@@ -4,7 +4,8 @@ Usage: python tools/smoke_test.py"""
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
 
 failures = []
 
@@ -69,6 +70,22 @@ def helpers_import():
     assert (app.RECONNECT_EXIT, app.DISCONNECT_EXIT, app.RECONNECT_FLAG) ==         (native.RECONNECT_EXIT, native.DISCONNECT_EXIT, native.RECONNECT_FLAG)
 
 
+def root_launcher_wiring():
+    repo = ROOT.parent
+    launcher = (repo / "iDesktop.bat").read_text(encoding="utf-8")
+    nested_launcher = (ROOT / "iDesktop.bat").read_text(encoding="utf-8")
+    installer = (ROOT / "installer" / "idesktop.iss").read_text(encoding="utf-8")
+    powershell_installer = (ROOT / "install.ps1").read_text(encoding="utf-8")
+
+    assert "set \"IDESKTOP_CODE_HOME=%IDESKTOP_HOME%Others\"" in launcher
+    assert "-m idesktop.splash %*" in launcher
+    assert 'call "%~dp0..\\iDesktop.bat" %*' in nested_launcher
+    assert 'Source: "{#ProjectRoot}\\..\\iDesktop.bat"; DestDir: "{app}"' in installer
+    assert 'Filename: "{app}\\iDesktop.bat"' in installer
+    assert "$launcher = Join-Path $src '..\\iDesktop.bat'" in powershell_installer
+    assert "$s.TargetPath = Join-Path $App 'iDesktop.bat'" in powershell_installer
+
+
 def splash_art_renders():
     from PIL import Image
 
@@ -97,5 +114,6 @@ check("winshape without a window", winshape_without_window)
 check("native patches apply", native_patches_apply)
 check("audio decoder opens", audio_decoder_opens)
 check("modules import", helpers_import)
+check("root launcher targets and installed shortcuts", root_launcher_wiring)
 check("splash artwork and rounded progress render", splash_art_renders)
 sys.exit(1 if failures else 0)

@@ -57,7 +57,7 @@ The existing no-admin PowerShell install remains available for development:
 irm https://raw.githubusercontent.com/kevinW0W/iDevice-Modded/main/Others/install.ps1 | iex
 ```
 
-The application source, build tools, and project files live in `Others`. The Start Menu and desktop shortcuts launch the installed `iDesktop.bat` file; the root `iDesktop.bat` forwards to the same launcher when running from a checkout. To build the Windows installer from source, install Inno Setup 6 and 64-bit Python 3.13 on Windows, then run `python tools\build_installer.py` from `Others`. The build verifies Python's official installer checksum and puts the runtime and dependency wheels inside the generated `dist\iDesktop-Setup-<version>-x64.exe`. The **Windows installer** GitHub Actions workflow also builds it on demand and for version tags.
+The application source, build tools, and project files live in `Others`. The Start Menu and desktop shortcuts target the repository-root `iDesktop.bat` launcher, which is also installed at the root of the app folder; it locates the Python runtime and launches the app code from `Others` in a checkout or from the installed app directory. To build the Windows installer from source, install Inno Setup 6 and 64-bit Python 3.13 on Windows, then run `python tools\build_installer.py` from `Others`. The build verifies Python's official installer checksum and puts the runtime and dependency wheels inside the generated `dist\iDesktop-Setup-<version>-x64.exe`. The **Windows installer** GitHub Actions workflow also builds it on demand and for version tags.
 
 ## First start
 

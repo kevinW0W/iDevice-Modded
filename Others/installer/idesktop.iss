@@ -1,5 +1,5 @@
 #ifndef AppVersion
-  #define AppVersion "0.1.3"
+  #define AppVersion "0.1.4"
 #endif
 #ifndef BuildDir
   #define BuildDir "..\build\installer"
@@ -67,7 +67,7 @@ Source: "{#ProjectRoot}\assets\idesktop-install-preview.png"; DestDir: "{app}\as
 Source: "{#ProjectRoot}\requirements.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#ProjectRoot}\LICENSE"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#ProjectRoot}\README.md"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#ProjectRoot}\iDesktop.bat"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#ProjectRoot}\..\iDesktop.bat"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#ProjectRoot}\extras\*"; DestDir: "{app}\extras"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "stop-processes.ps1"; DestDir: "{app}\installer"; Flags: ignoreversion
 
