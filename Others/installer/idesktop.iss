@@ -11,11 +11,11 @@
   #define SetupOutputDir "..\dist"
 #endif
 #ifndef SetupOutputName
-  #define SetupOutputName "iDesktop-Setup-" + AppVersion + "-x64"
+  #define SetupOutputName "iDevice-Modded-Setup-" + AppVersion + "-x64"
 #endif
 
-#define AppName "iDesktop"
-#define AppPublisher "iDesktop contributors"
+#define AppName "iDevice Modded"
+#define AppPublisher "iDevice Modded contributors"
 #define ProjectRoot ".."
 
 [Setup]
@@ -27,7 +27,7 @@ AppPublisherURL=https://github.com/kevinW0W/iDevice-Modded
 AppSupportURL=https://github.com/kevinW0W/iDevice-Modded/issues
 AppUpdatesURL=https://github.com/kevinW0W/iDevice-Modded/releases
 DefaultDirName={autopf}\iDesktop
-DefaultGroupName=iDesktop
+DefaultGroupName=iDevice Modded
 DisableProgramGroupPage=yes
 PrivilegesRequired={#InstallPrivileges}
 ArchitecturesAllowed=x64compatible and not arm64
@@ -37,7 +37,7 @@ WizardImageFile={#BuildDir}\wizard.bmp
 WizardSmallImageFile={#ProjectRoot}\assets\idesktop.png
 SetupIconFile={#ProjectRoot}\assets\idesktop.ico
 UninstallDisplayIcon={app}\assets\idesktop.ico
-UninstallDisplayName=iDesktop
+UninstallDisplayName=iDevice Modded
 Uninstallable=yes
 OutputDir={#SetupOutputDir}
 OutputBaseFilename={#SetupOutputName}
@@ -47,10 +47,10 @@ CloseApplications=yes
 RestartApplications=no
 SetupLogging=yes
 VersionInfoVersion={#AppVersion}.0
-VersionInfoProductName=iDesktop
+VersionInfoProductName=iDevice Modded
 VersionInfoProductVersion={#AppVersion}.0
 VersionInfoCompany={#AppPublisher}
-VersionInfoDescription=iDesktop Windows installer
+VersionInfoDescription=iDevice Modded Windows installer
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
@@ -73,9 +73,9 @@ Source: "{#ProjectRoot}\extras\*"; DestDir: "{app}\extras"; Flags: ignoreversion
 Source: "stop-processes.ps1"; DestDir: "{app}\installer"; Flags: ignoreversion
 
 [Icons]
-Name: "{autoprograms}\iDesktop"; Filename: "{sys}\wscript.exe"; Parameters: """{app}\iDesktop.vbs"""; WorkingDir: "{app}"; IconFilename: "{app}\assets\idesktop.ico"; Comment: "Mirror and control your iPhone"; Check: CreateStartMenuShortcuts
-Name: "{autoprograms}\Uninstall iDesktop"; Filename: "{uninstallexe}"; WorkingDir: "{app}"; IconFilename: "{app}\assets\idesktop.ico"; Check: CreateStartMenuShortcuts
-Name: "{autodesktop}\iDesktop"; Filename: "{sys}\wscript.exe"; Parameters: """{app}\iDesktop.vbs"""; WorkingDir: "{app}"; IconFilename: "{app}\assets\idesktop.ico"; Check: CreateDesktopShortcut
+Name: "{autoprograms}\iDevice Modded"; Filename: "{sys}\wscript.exe"; Parameters: """{app}\iDesktop.vbs"""; WorkingDir: "{app}"; IconFilename: "{app}\assets\idesktop.ico"; Comment: "Mirror and control your iPhone"; Check: CreateStartMenuShortcuts
+Name: "{autoprograms}\Uninstall iDevice Modded"; Filename: "{uninstallexe}"; WorkingDir: "{app}"; IconFilename: "{app}\assets\idesktop.ico"; Check: CreateStartMenuShortcuts
+Name: "{autodesktop}\iDevice Modded"; Filename: "{sys}\wscript.exe"; Parameters: """{app}\iDesktop.vbs"""; WorkingDir: "{app}"; IconFilename: "{app}\assets\idesktop.ico"; Check: CreateDesktopShortcut
 
 [UninstallRun]
 Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -NonInteractive -ExecutionPolicy Bypass -File ""{app}\installer\stop-processes.ps1"" -InstallRoot ""{app}"""; Flags: runhidden waituntilterminated; RunOnceId: "StopiDesktopProcesses"
@@ -221,7 +221,7 @@ begin
   WizardForm.WelcomeLabel1.Font.Color := $00FFF2F5;
   WizardForm.WelcomeLabel1.Font.Style := [fsBold];
   WizardForm.WelcomeLabel2.Caption :=
-    'Install iDesktop with its own Python runtime and required packages. No separate Python setup or internet connection is needed for the app dependencies.';
+    'Install iDevice Modded with its own Python runtime and required packages. No separate Python setup or internet connection is needed for the app dependencies.';
   WizardForm.WelcomeLabel2.Font.Name := 'Segoe UI';
   WizardForm.WelcomeLabel2.Font.Color := $00F0D2D8;
   WizardForm.BackButton.Font.Name := 'Segoe UI';
@@ -236,7 +236,7 @@ begin
   NewPageLabel(OptionsPage.Surface, 'A complete, self-contained install', 8, 17,
     True, $00FFF2F5);
   NewPageLabel(OptionsPage.Surface,
-    'Setup reuses compatible 64-bit Python 3.13 when it is already installed. Otherwise, it can install Python privately. iDesktop packages are installed offline in its own app environment.',
+    'Setup reuses compatible 64-bit Python 3.13 when it is already installed. Otherwise, it can install Python privately. iDevice Modded packages are installed offline in its own app environment.',
     48, 10, False, $00F0D2D8);
 
   OptionsCard := TPanel.Create(OptionsPage.Surface);
@@ -254,7 +254,7 @@ begin
   StartMenuShortcutCheck.Left := ScaleX(8);
   StartMenuShortcutCheck.Top := ScaleY(6);
   StartMenuShortcutCheck.Width := OptionsCard.ClientWidth - ScaleX(16);
-  StartMenuShortcutCheck.Caption := 'Add iDesktop to the Start Menu';
+  StartMenuShortcutCheck.Caption := 'Add iDevice Modded to the Start Menu';
   StartMenuShortcutCheck.Checked := True;
   StartMenuShortcutCheck.StyleElements := [];
   StartMenuShortcutCheck.Font.Name := 'Segoe UI';
@@ -368,14 +368,14 @@ begin
       ResultCode := -1;
     if ResultCode <> 0 then
     begin
-      MsgBox('iDesktop installed successfully, but Apple Devices could not be installed automatically.' +
+      MsgBox('iDevice Modded installed successfully, but Apple Devices could not be installed automatically.' +
         Chr(13) + Chr(10) + Chr(13) + Chr(10) +
         'Install it from the Microsoft Store to connect an iPhone over USB:' +
         Chr(13) + Chr(10) + 'https://apps.microsoft.com/detail/9NP83LWLPZ9K',
         mbInformation, MB_OK);
     end;
   except
-    MsgBox('iDesktop installed successfully, but Apple Devices could not be installed automatically.' +
+    MsgBox('iDevice Modded installed successfully, but Apple Devices could not be installed automatically.' +
       Chr(13) + Chr(10) + Chr(13) + Chr(10) + GetExceptionMessage +
       Chr(13) + Chr(10) + Chr(13) + Chr(10) +
       'Install it from the Microsoft Store: https://apps.microsoft.com/detail/9NP83LWLPZ9K',
@@ -455,10 +455,10 @@ begin
   end
   else
   begin
-    WizardForm.StatusLabel.Caption := 'Preparing an iDesktop Python environment...';
+    WizardForm.StatusLabel.Caption := 'Preparing an iDevice Modded Python environment...';
     if not Exec(ExistingPythonExe, '-m venv "' + ExpandConstant('{app}\runtime') + '"',
       '', SW_HIDE, ewWaitUntilTerminated, ResultCode) or (ResultCode <> 0) then
-      RaiseException('Could not create iDesktop''s private environment using the detected Python interpreter.');
+      RaiseException('Could not create iDevice Modded''s private environment using the detected Python interpreter.');
     RuntimePython := ExpandConstant('{app}\runtime\Scripts\python.exe');
   end;
 
@@ -466,12 +466,15 @@ begin
   BootstrapArgs := '"' + Bootstrap + '" --wheelhouse "' +
     ExpandConstant('{tmp}\wheelhouse.zip') + '" --requirements "' +
     ExpandConstant('{app}\requirements.txt') + '" --log "' + InstallLog + '"';
-  WizardForm.StatusLabel.Caption := 'Installing bundled iDesktop packages...';
+  WizardForm.StatusLabel.Caption := 'Installing bundled iDevice Modded packages...';
   if not Exec(RuntimePython, BootstrapArgs,
     ExpandConstant('{app}'), SW_HIDE, ewWaitUntilTerminated, ResultCode) or
      (ResultCode <> 0) then
-    RaiseException('Installing iDesktop packages failed (exit code ' +
+    RaiseException('Installing iDevice Modded packages failed (exit code ' +
       IntToStr(ResultCode) + '). See ' + InstallLog + ' for details.');
 
   InstallAppleDevices;
+  DeleteFile(ExpandConstant('{autoprograms}\iDesktop.lnk'));
+  DeleteFile(ExpandConstant('{autoprograms}\Uninstall iDesktop.lnk'));
+  DeleteFile(ExpandConstant('{autodesktop}\iDesktop.lnk'));
 end;

@@ -3,6 +3,7 @@
 ## 0.1.7
 
 - Fixed the floating mirror restoring itself about 10 seconds after it was minimized; periodic layout updates are now deferred while the window is minimized.
+- Rebranded the Windows installer as iDevice Modded.
 
 ## 0.1.6
 

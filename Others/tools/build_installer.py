@@ -120,7 +120,7 @@ def make_wizard_art(build_dir: Path) -> Path:
     bold = ImageFont.truetype(str(bold_path), 18) if bold_path.exists() else ImageFont.load_default()
     regular = ImageFont.truetype(str(regular_path), 10) if regular_path.exists() else ImageFont.load_default()
     draw = ImageDraw.Draw(image, "RGBA")
-    title = "iDesktop"
+    title = "iDevice Modded"
     box = draw.textbbox((0, 0), title, font=bold)
     draw.text(((width - box[2]) / 2, 158), title, font=bold, fill=(248, 246, 255, 255))
     lines = ("YOUR IPHONE", "ON YOUR DESKTOP", "HD  •  TOUCH  •  SOUND")
@@ -190,11 +190,11 @@ def main() -> None:
     parser.add_argument(
         "--preview",
         action="store_true",
-        help="compile a non-elevated wizard preview; it must not be used to install iDesktop",
+        help="compile a non-elevated wizard preview; it must not be used to install iDevice Modded",
     )
     args = parser.parse_args()
     if sys.platform != "win32" or sys.maxsize <= 2**32:
-        raise SystemExit("Build the iDesktop installer on 64-bit Windows.")
+        raise SystemExit("Build the iDevice Modded installer on 64-bit Windows.")
     if sys.version_info[:2] != (3, 13):
         raise SystemExit("Build dependencies must be downloaded with 64-bit Python 3.13.")
 
@@ -221,7 +221,7 @@ def main() -> None:
                 [
                     "/DInstallPrivileges=lowest",
                     f"/DSetupOutputDir={preview_dir}",
-                    "/DSetupOutputName=iDesktop-Installer-Preview",
+                    "/DSetupOutputName=iDevice-Modded-Installer-Preview",
                 ]
             )
         command.append(str(ROOT / "installer" / "idesktop.iss"))
@@ -235,18 +235,18 @@ def main() -> None:
     else:
         shutil.rmtree(build_dir)
         if args.preview:
-            output_path = preview_dir / "iDesktop-Installer-Preview.exe"
+            output_path = preview_dir / "iDevice-Modded-Installer-Preview.exe"
         else:
             for name in (
                 "iDesktop-finished-preview.png",
                 "iDesktop-installer-preview.png",
                 "iDesktop-installing-preview.png",
-                "iDesktop-Installer-Preview.exe",
+                "iDevice-Modded-Installer-Preview.exe",
             ):
                 (ROOT / "dist" / name).unlink(missing_ok=True)
             if preview_dir.exists():
                 shutil.rmtree(preview_dir)
-            output_path = ROOT / "dist" / f"iDesktop-Setup-{version}-x64.exe"
+            output_path = ROOT / "dist" / f"iDevice-Modded-Setup-{version}-x64.exe"
         print(f"Installer created: {output_path}")
 
 

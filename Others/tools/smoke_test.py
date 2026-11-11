@@ -103,6 +103,15 @@ def root_launcher_wiring():
     assert "$s.Arguments = '\"' + (Join-Path $App 'iDesktop.vbs') + '\"'" in powershell_installer
 
 
+def installer_uses_fork_branding():
+    installer = (ROOT / "installer" / "idesktop.iss").read_text(encoding="utf-8")
+    builder = (ROOT / "tools" / "build_installer.py").read_text(encoding="utf-8")
+    assert '#define AppName "iDevice Modded"' in installer
+    assert "VersionInfoProductName=iDevice Modded" in installer
+    assert '"iDevice-Modded-Setup-" + AppVersion + "-x64"' in installer
+    assert 'f"iDevice-Modded-Setup-{version}-x64.exe"' in builder
+
+
 def splash_art_renders():
     from PIL import Image
 
@@ -137,5 +146,6 @@ check("native patches apply", native_patches_apply)
 check("audio decoder opens", audio_decoder_opens)
 check("modules import", helpers_import)
 check("root launcher targets and installed shortcuts", root_launcher_wiring)
+check("installer uses fork branding", installer_uses_fork_branding)
 check("splash artwork and rounded progress render", splash_art_renders)
 sys.exit(1 if failures else 0)
