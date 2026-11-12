@@ -17,6 +17,15 @@ TITLE = "iDesktop"
 SPLASH_WIDTH = 900
 SPLASH_HEIGHT = 590
 POSITION_FILE = Path(os.environ.get("APPDATA", Path.home())) / "iDesktop" / "splash-position.json"
+_GWL_EXSTYLE = -20
+_WS_EX_TOOLWINDOW = 0x00000080
+_WS_EX_APPWINDOW = 0x00040000
+_SWP_NOSIZE = 0x0001
+_SWP_NOMOVE = 0x0002
+_SWP_NOZORDER = 0x0004
+_SWP_NOACTIVATE = 0x0010
+_SWP_FRAMECHANGED = 0x0020
+_SW_MINIMIZE = 6
 
 
 def _is_viewer_title(title: str) -> bool:
@@ -167,6 +176,43 @@ def _save_position(x: int, y: int) -> None:
     window_position.save_position(POSITION_FILE, x, y)
 
 
+def _taskbar_extended_style(style: int) -> int:
+    return (style | _WS_EX_APPWINDOW) & ~_WS_EX_TOOLWINDOW
+
+
+def _enable_taskbar_button(root: tk.Tk) -> None:
+    if os.name != "nt":
+        return
+    root.update_idletasks()
+    user32 = ctypes.windll.user32
+    user32.GetWindowLongW.argtypes = [wintypes.HWND, ctypes.c_int]
+    user32.GetWindowLongW.restype = ctypes.c_long
+    user32.SetWindowLongW.argtypes = [wintypes.HWND, ctypes.c_int, ctypes.c_long]
+    user32.SetWindowLongW.restype = ctypes.c_long
+    user32.SetWindowPos.argtypes = [
+        wintypes.HWND, wintypes.HWND, ctypes.c_int, ctypes.c_int,
+        ctypes.c_int, ctypes.c_int, wintypes.UINT,
+    ]
+    user32.SetWindowPos.restype = wintypes.BOOL
+    hwnd = root.winfo_id()
+    style = user32.GetWindowLongW(hwnd, _GWL_EXSTYLE)
+    ctypes.set_last_error(0)
+    user32.SetWindowLongW(hwnd, _GWL_EXSTYLE, _taskbar_extended_style(style))
+    error = ctypes.get_last_error()
+    if error:
+        raise ctypes.WinError(error)
+    flags = _SWP_NOMOVE | _SWP_NOSIZE | _SWP_NOZORDER | _SWP_NOACTIVATE | _SWP_FRAMECHANGED
+    if not user32.SetWindowPos(hwnd, None, 0, 0, 0, 0, flags):
+        raise ctypes.WinError()
+
+
+def _minimize_splash(root: tk.Tk) -> None:
+    if os.name == "nt":
+        ctypes.windll.user32.ShowWindow(root.winfo_id(), _SW_MINIMIZE)
+    else:
+        root.iconify()
+
+
 def main() -> None:
     root = tk.Tk()
     root.title(TITLE + " startup")
@@ -190,6 +236,7 @@ def main() -> None:
     root.geometry(f"{SPLASH_WIDTH}x{SPLASH_HEIGHT}+{x}+{y}")
     root.deiconify()
     root.update_idletasks()
+    _enable_taskbar_button(root)
 
     panel_x, panel_y, panel_width, panel_height = 54, 35, 792, 520
     canvas = tk.Canvas(root, width=SPLASH_WIDTH, height=SPLASH_HEIGHT,
@@ -211,7 +258,7 @@ def main() -> None:
                             fg="#dce8ff", bg="#171e2b", cursor="fleur")
     header_title.pack(side="left")
     minimize_button = tk.Button(
-        header, text="−", command=root.iconify, borderwidth=0,
+        header, text="−", command=lambda: _minimize_splash(root), borderwidth=0,
         font=("Segoe UI", 15), fg="#b8c5db", bg="#171e2b",
         activebackground="#293449", activeforeground="white",
         cursor="hand2", relief="flat",

@@ -129,6 +129,7 @@ def splash_art_renders():
     assert splash._clamp_position(2100, 90, work_areas) == (2100, 90)
     assert splash._clamp_position(5000, 1200, work_areas) == (2940, 450)
     assert splash._clamp_position(-5000, -5000, work_areas) == (0, 0)
+    assert splash._taskbar_extended_style(0x80 | 0x100) == 0x40000 | 0x100
     with TemporaryDirectory() as temp_dir:
         position_file = Path(temp_dir) / "splash-position.json"
         with patch.object(splash, "POSITION_FILE", position_file):
@@ -140,6 +141,8 @@ def splash_art_renders():
     assert "root.overrideredirect(True)" in splash_source
     assert "iDevice Modded" in splash_source
     assert "minimize_button" in splash_source and "close_button" in splash_source
+    assert "command=lambda: _minimize_splash(root)" in splash_source
+    assert "_enable_taskbar_button(root)" in splash_source
     assert 'root.attributes("-topmost", True)' not in splash_source
     assert "creationflags=no_window" in splash_source
     preview = Path(__file__).resolve().parents[1] / "assets" / "idesktop-install-preview.png"

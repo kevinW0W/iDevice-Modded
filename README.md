@@ -42,6 +42,7 @@ application dependencies are included for offline installation.
 - Start Menu and desktop shortcuts launch the app through the windowless Python runtime directly.
 - Startup splash with app preview, live startup log, and rounded progress indicator.
 - Draggable, minimizable startup splash that remembers its position and recovers when monitors change (no terminal popup).
+- Minimized splash can be restored from its taskbar button while startup continues.
 - Edge app window remembers its position and recovers when monitors change.
 - Floating mirror stays minimized until you restore it.
 - Landscape wheel scrolling follows the on-screen direction.

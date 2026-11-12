@@ -8,6 +8,7 @@
 - Restore saved windows on a connected monitor and clamp off-screen positions after monitor changes.
 - Removed the separate VBS shortcut helper; shortcuts now launch the windowless Python runtime directly.
 - Replaced the splash's native Windows title bar with custom draggable chrome and matching minimize/close controls.
+- Fixed splash minimization and added a taskbar button to restore it while startup continues.
 
 ## 0.1.8
 
