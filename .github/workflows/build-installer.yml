@@ -73,6 +73,7 @@ jobs:
           ## What's fixed
           - The floating mirror stays minimized until you restore it; periodic layout updates no longer bring the window back.
           - The Windows installer UI and setup branding now use iDevice Modded.
+          - The startup splash is draggable, has a minimize button, and no longer stays above other apps.
 
           ## Features
           - iPhone mirroring and controls over USB or paired Wi-Fi.

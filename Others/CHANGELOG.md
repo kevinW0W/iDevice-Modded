@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.8
+
+- Made the startup splash draggable from its Windows title bar and custom header.
+- Removed the always-on-top behavior and added a minimize button so the splash can get out of the way.
+
 ## 0.1.7
 
 - Fixed the floating mirror restoring itself about 10 seconds after it was minimized; periodic layout updates are now deferred while the window is minimized.

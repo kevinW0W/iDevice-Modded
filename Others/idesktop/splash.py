@@ -147,14 +147,12 @@ def main() -> None:
     root.title(TITLE + " startup")
     root.configure(bg="#080f21")
     root.resizable(False, False)
-    root.overrideredirect(True)
     root.withdraw()
     root.update_idletasks()
     x, y = _center_position(root.winfo_screenwidth(), root.winfo_screenheight())
     root.geometry(f"{SPLASH_WIDTH}x{SPLASH_HEIGHT}+{x}+{y}")
     root.deiconify()
     root.update_idletasks()
-    root.attributes("-topmost", True)
 
     panel_x, panel_y, panel_width, panel_height = 54, 35, 792, 520
     canvas = tk.Canvas(root, width=SPLASH_WIDTH, height=SPLASH_HEIGHT,
@@ -175,6 +173,11 @@ def main() -> None:
     header_title = tk.Label(header, text="iDesktop Setup", font=("Segoe UI", 10, "bold"),
                             fg="#dce8ff", bg="#171e2b", cursor="fleur")
     header_title.pack(side="left")
+    minimize_button = tk.Button(header, text="−", command=root.iconify, borderwidth=0,
+                                font=("Segoe UI", 15), fg="#b8c5db", bg="#171e2b",
+                                activebackground="#293449", activeforeground="white",
+                                cursor="hand2", relief="flat")
+    minimize_button.pack(side="right", padx=(0, 7))
     close_button = tk.Button(header, text="×", command=root.destroy, borderwidth=0,
                              font=("Segoe UI", 16), fg="#b8c5db", bg="#171e2b",
                              activebackground="#293449", activeforeground="white",

@@ -120,6 +120,9 @@ def splash_art_renders():
     assert _center_position(1920, 1080) == (510, 245)
     splash_source = (ROOT / "idesktop" / "splash.py").read_text(encoding="utf-8")
     assert 'drag_widget.bind("<B1-Motion>", move_splash)' in splash_source
+    assert "root.overrideredirect(True)" not in splash_source
+    assert 'command=root.iconify' in splash_source
+    assert 'root.attributes("-topmost", True)' not in splash_source
     assert "creationflags=no_window" in splash_source
     preview = Path(__file__).resolve().parents[1] / "assets" / "idesktop-install-preview.png"
     laptop = _make_laptop_frame(Image.open(preview))

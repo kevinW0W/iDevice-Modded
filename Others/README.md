@@ -57,12 +57,12 @@ The existing no-admin PowerShell install remains available for development:
 irm https://raw.githubusercontent.com/kevinW0W/iDevice-Modded/main/Others/install.ps1 | iex
 ```
 
-The application source, build tools, and project files live in `Others`. The Start Menu and desktop shortcuts silently run the repository-root `iDesktop.bat` launcher through `iDesktop.vbs`; the splash opens centered and can be dragged aside. The Edge app window also opens centered in the usable desktop area, accounting for the taskbar and display scaling, and the floating mirror stays minimized until you restore it. The root batch locates the Python runtime and launches app code from `Others` in a checkout or from the installed app directory. To build the Windows installer from source, install Inno Setup 6 and 64-bit Python 3.13 on Windows, then run `python tools\build_installer.py` from `Others`. The build verifies Python's official installer checksum and puts the runtime and dependency wheels inside the generated `dist\iDevice-Modded-Setup-<version>-x64.exe`. The **Windows installer** GitHub Actions workflow also builds it on demand and for version tags.
+The application source, build tools, and project files live in `Others`. The Start Menu and desktop shortcuts silently run the repository-root `iDesktop.bat` launcher through `iDesktop.vbs`; the splash opens centered, can be dragged by its header or Windows title bar, and can be minimized without staying above other apps. The Edge app window also opens centered in the usable desktop area, accounting for the taskbar and display scaling, and the floating mirror stays minimized until you restore it. The root batch locates the Python runtime and launches app code from `Others` in a checkout or from the installed app directory. To build the Windows installer from source, install Inno Setup 6 and 64-bit Python 3.13 on Windows, then run `python tools\build_installer.py` from `Others`. The build verifies Python's official installer checksum and puts the runtime and dependency wheels inside the generated `dist\iDevice-Modded-Setup-<version>-x64.exe`. The **Windows installer** GitHub Actions workflow also builds it on demand and for version tags.
 
 ## First start
 
 1. Plug the iPhone in with a cable and unlock it.
-2. Open **iDesktop**. A laptop-style splash shows startup progress and recent log lines while it connects. If startup stops, the log stays visible for troubleshooting.
+2. Open **iDesktop**. A laptop-style splash shows startup progress and recent log lines while it connects. Drag it by the Windows title bar or custom header, or minimize it to the taskbar while it works.
 3. Follow the prompts. They appear only the first time:
    - **Trust This Computer?** Tap *Trust* on the iPhone and enter your passcode.
    - **Developer Mode** (the HD mirror needs it): on the iPhone, open Settings > Privacy & Security > Developer Mode and turn it on. The phone restarts. Then tap *Turn On* and click *Retry*.
