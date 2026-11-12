@@ -180,6 +180,10 @@ def _taskbar_extended_style(style: int) -> int:
     return (style | _WS_EX_APPWINDOW) & ~_WS_EX_TOOLWINDOW
 
 
+def _toplevel_hwnd(root: tk.Tk) -> int:
+    return int(root.tk.call("wm", "frame", root._w), 0)
+
+
 def _enable_taskbar_button(root: tk.Tk) -> None:
     if os.name != "nt":
         return
@@ -194,7 +198,7 @@ def _enable_taskbar_button(root: tk.Tk) -> None:
         ctypes.c_int, ctypes.c_int, wintypes.UINT,
     ]
     user32.SetWindowPos.restype = wintypes.BOOL
-    hwnd = root.winfo_id()
+    hwnd = _toplevel_hwnd(root)
     style = user32.GetWindowLongW(hwnd, _GWL_EXSTYLE)
     ctypes.set_last_error(0)
     user32.SetWindowLongW(hwnd, _GWL_EXSTYLE, _taskbar_extended_style(style))
@@ -208,7 +212,7 @@ def _enable_taskbar_button(root: tk.Tk) -> None:
 
 def _minimize_splash(root: tk.Tk) -> None:
     if os.name == "nt":
-        ctypes.windll.user32.ShowWindow(root.winfo_id(), _SW_MINIMIZE)
+        ctypes.windll.user32.ShowWindow(_toplevel_hwnd(root), _SW_MINIMIZE)
     else:
         root.iconify()
 
@@ -217,6 +221,9 @@ def main() -> None:
     root = tk.Tk()
     root.title(TITLE + " startup")
     root.overrideredirect(True)
+    if os.name == "nt":
+        icon_path = Path(__file__).resolve().parents[1] / "assets" / "idesktop.ico"
+        root.iconbitmap(str(icon_path))
     root.configure(bg="#080f21")
     root.resizable(False, False)
     root.withdraw()

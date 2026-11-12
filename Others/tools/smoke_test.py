@@ -143,6 +143,7 @@ def splash_art_renders():
     assert "minimize_button" in splash_source and "close_button" in splash_source
     assert "command=lambda: _minimize_splash(root)" in splash_source
     assert "_enable_taskbar_button(root)" in splash_source
+    assert 'root.tk.call("wm", "frame", root._w)' in splash_source
     assert 'root.attributes("-topmost", True)' not in splash_source
     assert "creationflags=no_window" in splash_source
     preview = Path(__file__).resolve().parents[1] / "assets" / "idesktop-install-preview.png"
@@ -164,6 +165,56 @@ def splash_art_renders():
     assert [shape[0] for shape in canvas.shapes] == ["rectangle", "oval", "oval"]
 
 
+def splash_native_taskbar_minimize():
+    if sys.platform != "win32":
+        return
+
+    import ctypes
+    import tkinter as tk
+    from ctypes import wintypes
+
+    from idesktop import splash
+
+    root = tk.Tk()
+    try:
+        root.withdraw()
+        root.title("iDesktop splash test")
+        root.overrideredirect(True)
+        root.geometry("320x200+40+40")
+        root.deiconify()
+        root.update_idletasks()
+        child_hwnd = root.winfo_id()
+        top_hwnd = splash._toplevel_hwnd(root)
+        assert child_hwnd != top_hwnd
+
+        user32 = ctypes.windll.user32
+        user32.GetClassNameW.argtypes = [wintypes.HWND, wintypes.LPWSTR, ctypes.c_int]
+        user32.GetClassNameW.restype = ctypes.c_int
+        user32.GetWindowLongW.argtypes = [wintypes.HWND, ctypes.c_int]
+        user32.GetWindowLongW.restype = ctypes.c_long
+        user32.IsIconic.argtypes = [wintypes.HWND]
+        user32.IsIconic.restype = wintypes.BOOL
+        child_class = ctypes.create_unicode_buffer(128)
+        top_class = ctypes.create_unicode_buffer(128)
+        user32.GetClassNameW(child_hwnd, child_class, len(child_class))
+        user32.GetClassNameW(top_hwnd, top_class, len(top_class))
+        assert child_class.value == "TkChild" and top_class.value == "TkTopLevel"
+
+        splash._enable_taskbar_button(root)
+        style = user32.GetWindowLongW(top_hwnd, splash._GWL_EXSTYLE)
+        assert style & splash._WS_EX_APPWINDOW
+        assert not style & splash._WS_EX_TOOLWINDOW
+        assert not user32.GetWindowLongW(child_hwnd, splash._GWL_EXSTYLE) & splash._WS_EX_APPWINDOW
+
+        splash._minimize_splash(root)
+        assert user32.IsIconic(top_hwnd)
+        user32.ShowWindow(top_hwnd, 9)
+        root.update_idletasks()
+        assert not user32.IsIconic(top_hwnd) and user32.IsWindowVisible(top_hwnd)
+    finally:
+        root.destroy()
+
+
 check("winshape without a window", winshape_without_window)
 check("minimized window layout is deferred", winshape_minimized_layout_is_deferred)
 check("native patches apply", native_patches_apply)
@@ -172,4 +223,5 @@ check("modules import", helpers_import)
 check("root launcher targets and installed shortcuts", root_launcher_wiring)
 check("installer uses fork branding", installer_uses_fork_branding)
 check("splash artwork and rounded progress render", splash_art_renders)
+check("splash taskbar button minimizes and restores", splash_native_taskbar_minimize)
 sys.exit(1 if failures else 0)

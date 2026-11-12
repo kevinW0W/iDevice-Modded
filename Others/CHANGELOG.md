@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.10
+
+### What's Fixed
+
+- Fixed splash minimize and taskbar restore by applying native window styles and commands to the actual Tk top-level window.
+- Added the app icon to the splash taskbar button.
+
 ## 0.1.9
 
 ### What's Fixed
