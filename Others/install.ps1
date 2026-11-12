@@ -91,9 +91,6 @@ if ((Resolve-Path $src).Path -ne $App) {
     if (-not (Test-Path $launcher)) { $launcher = Join-Path $src 'iDesktop.bat' }
     if (-not (Test-Path $launcher)) { Fail "The root iDesktop.bat launcher is missing from '$src'." }
     Copy-Item $launcher (Join-Path $App 'iDesktop.bat') -Force
-    $hiddenLauncher = Join-Path $src '..\iDesktop.vbs'
-    if (-not (Test-Path $hiddenLauncher)) { Fail "The root iDesktop.vbs launcher is missing from '$src'." }
-    Copy-Item $hiddenLauncher (Join-Path $App 'iDesktop.vbs') -Force
 }
 if (-not $local) { Remove-Item (Split-Path $src) -Recurse -Force -ErrorAction SilentlyContinue }
 
@@ -138,8 +135,8 @@ Step "Creating shortcuts"
 $shell = New-Object -ComObject WScript.Shell
 function New-Shortcut($path) {
     $s = $shell.CreateShortcut($path)
-    $s.TargetPath = Join-Path $env:WINDIR 'System32\wscript.exe'
-    $s.Arguments = '"' + (Join-Path $App 'iDesktop.vbs') + '"'
+    $s.TargetPath = Join-Path $Venv 'Scripts\pythonw.exe'
+    $s.Arguments = '-m idesktop.splash'
     $s.WorkingDirectory = $App
     $s.IconLocation = (Join-Path $App 'assets\idesktop.ico')
     $s.Description = 'Mirror and control your iPhone'

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.9
+
+### What's Fixed
+
+- Remember the startup splash and Edge mirror positions between launches.
+- Restore saved windows on a connected monitor and clamp off-screen positions after monitor changes.
+- Removed the separate VBS shortcut helper; shortcuts now launch the windowless Python runtime directly.
+- Replaced the splash's native Windows title bar with custom draggable chrome and matching minimize/close controls.
+
 ## 0.1.8
 
 - Made the startup splash draggable from its Windows title bar and custom header.
@@ -18,7 +27,7 @@
 
 - Fixed wheel scrolling in landscape by rotating scroll gestures to match the visible screen direction.
 - The startup splash now opens centered, can be dragged by its header, and starts iDesktop without showing a console window.
-- Start Menu and desktop shortcuts launch the root `iDesktop.bat` through a hidden Windows Script Host helper so only the splash is shown.
+- Start Menu and desktop shortcuts open the splash without showing a console window.
 
 ## 0.1.4
 

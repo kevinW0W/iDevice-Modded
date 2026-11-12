@@ -11,9 +11,12 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFilter, ImageOps, ImageTk
 
+from . import window_position
+
 TITLE = "iDesktop"
 SPLASH_WIDTH = 900
 SPLASH_HEIGHT = 590
+POSITION_FILE = Path(os.environ.get("APPDATA", Path.home())) / "iDesktop" / "splash-position.json"
 
 
 def _is_viewer_title(title: str) -> bool:
@@ -142,14 +145,48 @@ def _center_position(screen_width: int, screen_height: int) -> tuple[int, int]:
     return (screen_width - SPLASH_WIDTH) // 2, (screen_height - SPLASH_HEIGHT) // 2
 
 
+def _monitor_work_areas() -> list[tuple[int, int, int, int]]:
+    return window_position.monitor_work_areas()
+
+
+def _clamp_position(
+    x: int,
+    y: int,
+    work_areas: list[tuple[int, int, int, int]],
+    width: int = SPLASH_WIDTH,
+    height: int = SPLASH_HEIGHT,
+) -> tuple[int, int]:
+    return window_position.clamp_position(x, y, work_areas, width, height)
+
+
+def _load_position() -> tuple[int, int] | None:
+    return window_position.load_position(POSITION_FILE)
+
+
+def _save_position(x: int, y: int) -> None:
+    window_position.save_position(POSITION_FILE, x, y)
+
+
 def main() -> None:
     root = tk.Tk()
     root.title(TITLE + " startup")
+    root.overrideredirect(True)
     root.configure(bg="#080f21")
     root.resizable(False, False)
     root.withdraw()
     root.update_idletasks()
-    x, y = _center_position(root.winfo_screenwidth(), root.winfo_screenheight())
+    position = _load_position()
+    if position is not None:
+        x, y = position
+    work_areas = _monitor_work_areas() if os.name == "nt" else []
+    if not work_areas:
+        work_areas = [(0, 0, root.winfo_screenwidth(), root.winfo_screenheight())]
+    if position is None:
+        primary = work_areas[0]
+        x, y = _center_position(primary[2] - primary[0], primary[3] - primary[1])
+        x += primary[0]
+        y += primary[1]
+    x, y = _clamp_position(x, y, work_areas)
     root.geometry(f"{SPLASH_WIDTH}x{SPLASH_HEIGHT}+{x}+{y}")
     root.deiconify()
     root.update_idletasks()
@@ -170,31 +207,59 @@ def main() -> None:
 
     header = tk.Frame(panel, bg="#171e2b")
     header.place(x=24, y=16, width=panel_width - 48, height=38)
-    header_title = tk.Label(header, text="iDesktop Setup", font=("Segoe UI", 10, "bold"),
+    header_title = tk.Label(header, text="iDevice Modded", font=("Segoe UI", 10, "bold"),
                             fg="#dce8ff", bg="#171e2b", cursor="fleur")
     header_title.pack(side="left")
-    minimize_button = tk.Button(header, text="−", command=root.iconify, borderwidth=0,
-                                font=("Segoe UI", 15), fg="#b8c5db", bg="#171e2b",
-                                activebackground="#293449", activeforeground="white",
-                                cursor="hand2", relief="flat")
+    minimize_button = tk.Button(
+        header, text="−", command=root.iconify, borderwidth=0,
+        font=("Segoe UI", 15), fg="#b8c5db", bg="#171e2b",
+        activebackground="#293449", activeforeground="white",
+        cursor="hand2", relief="flat",
+    )
     minimize_button.pack(side="right", padx=(0, 7))
-    close_button = tk.Button(header, text="×", command=root.destroy, borderwidth=0,
-                             font=("Segoe UI", 16), fg="#b8c5db", bg="#171e2b",
-                             activebackground="#293449", activeforeground="white",
-                             cursor="hand2", relief="flat")
+    close_button = tk.Button(
+        header, text="×", command=root.destroy, borderwidth=0,
+        font=("Segoe UI", 16), fg="#b8c5db", bg="#171e2b",
+        activebackground="#293449", activeforeground="white",
+        cursor="hand2", relief="flat",
+    )
     close_button.pack(side="right", padx=(0, 3))
 
     drag_origin = (0, 0, 0, 0)
+    last_position = (x, y)
 
     def begin_drag(event: tk.Event) -> None:
         nonlocal drag_origin
         drag_origin = (event.x_root, event.y_root, root.winfo_x(), root.winfo_y())
 
     def move_splash(event: tk.Event) -> None:
+        nonlocal last_position
         pointer_x, pointer_y, window_x, window_y = drag_origin
         x = window_x + event.x_root - pointer_x
         y = window_y + event.y_root - pointer_y
+        last_position = (x, y)
         root.geometry(f"+{x}+{y}")
+
+    save_job = None
+
+    def schedule_save(_event: tk.Event | None = None) -> None:
+        nonlocal last_position, save_job
+        if root.state() != "normal":
+            return
+        last_position = (root.winfo_x(), root.winfo_y())
+        if save_job is not None:
+            root.after_cancel(save_job)
+        save_job = root.after(300, lambda: _save_position(*last_position))
+
+    def save_on_destroy(event: tk.Event) -> None:
+        nonlocal save_job
+        if event.widget is root:
+            if save_job is not None:
+                root.after_cancel(save_job)
+            _save_position(*last_position)
+
+    root.bind("<Configure>", schedule_save)
+    root.bind("<Destroy>", save_on_destroy)
 
     for drag_widget in (header, header_title):
         drag_widget.bind("<ButtonPress-1>", begin_drag)

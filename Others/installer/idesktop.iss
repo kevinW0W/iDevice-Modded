@@ -1,5 +1,5 @@
 #ifndef AppVersion
-  #define AppVersion "0.1.8"
+  #define AppVersion "0.1.9"
 #endif
 #ifndef BuildDir
   #define BuildDir "..\build\installer"
@@ -68,14 +68,16 @@ Source: "{#ProjectRoot}\requirements.txt"; DestDir: "{app}"; Flags: ignoreversio
 Source: "{#ProjectRoot}\LICENSE"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#ProjectRoot}\README.md"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#ProjectRoot}\..\iDesktop.bat"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#ProjectRoot}\..\iDesktop.vbs"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#ProjectRoot}\extras\*"; DestDir: "{app}\extras"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "stop-processes.ps1"; DestDir: "{app}\installer"; Flags: ignoreversion
 
+[InstallDelete]
+Type: files; Name: "{app}\iDesktop.vbs"
+
 [Icons]
-Name: "{autoprograms}\iDevice Modded"; Filename: "{sys}\wscript.exe"; Parameters: """{app}\iDesktop.vbs"""; WorkingDir: "{app}"; IconFilename: "{app}\assets\idesktop.ico"; Comment: "Mirror and control your iPhone"; Check: CreateStartMenuShortcuts
+Name: "{autoprograms}\iDevice Modded"; Filename: "{code:GetPythonwExe}"; Parameters: "-m idesktop.splash"; WorkingDir: "{app}"; IconFilename: "{app}\assets\idesktop.ico"; Comment: "Mirror and control your iPhone"; Check: CreateStartMenuShortcuts
 Name: "{autoprograms}\Uninstall iDevice Modded"; Filename: "{uninstallexe}"; WorkingDir: "{app}"; IconFilename: "{app}\assets\idesktop.ico"; Check: CreateStartMenuShortcuts
-Name: "{autodesktop}\iDevice Modded"; Filename: "{sys}\wscript.exe"; Parameters: """{app}\iDesktop.vbs"""; WorkingDir: "{app}"; IconFilename: "{app}\assets\idesktop.ico"; Check: CreateDesktopShortcut
+Name: "{autodesktop}\iDevice Modded"; Filename: "{code:GetPythonwExe}"; Parameters: "-m idesktop.splash"; WorkingDir: "{app}"; IconFilename: "{app}\assets\idesktop.ico"; Comment: "Mirror and control your iPhone"; Check: CreateDesktopShortcut
 
 [UninstallRun]
 Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -NonInteractive -ExecutionPolicy Bypass -File ""{app}\installer\stop-processes.ps1"" -InstallRoot ""{app}"""; Flags: runhidden waituntilterminated; RunOnceId: "StopiDesktopProcesses"
@@ -149,6 +151,14 @@ begin
 
   Launcher := FileSearch('py.exe', GetEnv('PATH'));
   Result := FindCompatiblePython(Launcher, '-3.13-64 ');
+end;
+
+function GetPythonwExe(Param: String): String;
+begin
+  if InstallPythonCheck.Checked then
+    Result := ExpandConstant('{app}\runtime\pythonw.exe')
+  else
+    Result := ExpandConstant('{app}\runtime\Scripts\pythonw.exe');
 end;
 
 procedure SetInstallerProgressColors;

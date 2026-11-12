@@ -14,14 +14,17 @@ import shutil
 import subprocess
 import sys
 import time
+from ctypes import wintypes
 from pathlib import Path
 
 import requests
 
 from . import device
 from .device import CONFIG_DIR, DeviceManager, pmd, tunneld_devices, usbmuxd_running
+from . import window_position
 
 LOGS = CONFIG_DIR / "logs"
+APP_WINDOW_POSITION = CONFIG_DIR / "app-window-position.json"
 NATIVE_MIN_IOS = 27
 CAMERA_BUSY = "camera-busy"
 keyboard_capture_process = None
@@ -138,24 +141,85 @@ def _centered_window_bounds(
     return width, height, x, y
 
 
+def _app_window_bounds(
+    work_areas: list[tuple[int, int, int, int]],
+    scale: float,
+    saved_position: tuple[int, int] | None,
+) -> tuple[int, int, int, int]:
+    width, height, x, y = _centered_window_bounds(work_areas[0], scale)
+    if saved_position is not None:
+        logical_areas = [tuple(int(value / scale) for value in area) for area in work_areas]
+        x, y = window_position.clamp_position(*saved_position, logical_areas, width, height)
+    return width, height, x, y
+
+
+def _browser_window_position(process_id: int) -> tuple[int, int] | None:
+    if os.name != "nt":
+        return None
+
+    user32 = ctypes.windll.user32
+    position = None
+    callback_type = ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HWND, wintypes.LPARAM)
+    user32.EnumWindows.argtypes = [callback_type, wintypes.LPARAM]
+    user32.EnumWindows.restype = wintypes.BOOL
+    user32.IsWindowVisible.argtypes = [wintypes.HWND]
+    user32.IsWindowVisible.restype = wintypes.BOOL
+    user32.IsIconic.argtypes = [wintypes.HWND]
+    user32.IsIconic.restype = wintypes.BOOL
+    user32.GetWindowTextW.argtypes = [wintypes.HWND, wintypes.LPWSTR, ctypes.c_int]
+    user32.GetWindowTextW.restype = ctypes.c_int
+    user32.GetWindowThreadProcessId.argtypes = [wintypes.HWND, ctypes.POINTER(wintypes.DWORD)]
+    user32.GetWindowThreadProcessId.restype = wintypes.DWORD
+    user32.GetWindowRect.argtypes = [wintypes.HWND, ctypes.POINTER(wintypes.RECT)]
+    user32.GetWindowRect.restype = wintypes.BOOL
+
+    @callback_type
+    def visit(hwnd, _data):
+        nonlocal position
+        if not user32.IsWindowVisible(hwnd) or user32.IsIconic(hwnd):
+            return True
+        process = wintypes.DWORD()
+        user32.GetWindowThreadProcessId(hwnd, ctypes.byref(process))
+        if process.value != process_id:
+            return True
+        title = ctypes.create_unicode_buffer(256)
+        user32.GetWindowTextW(hwnd, title, len(title))
+        if title.value != "iDesktop" and not title.value.startswith("iDesktop ("):
+            return True
+        rect = wintypes.RECT()
+        if not user32.GetWindowRect(hwnd, ctypes.byref(rect)):
+            return False
+        position = (rect.left, rect.top)
+        return False
+
+    user32.EnumWindows(visit, 0)
+    return position
+
+
+def _save_browser_window_position(process_id: int) -> None:
+    position = _browser_window_position(process_id)
+    if position is not None and window_position.load_position(APP_WINDOW_POSITION) != position:
+        window_position.save_position(APP_WINDOW_POSITION, *position)
+
+
 def open_app_window(url: str) -> subprocess.Popen | None:
     exe = find_browser()
     if not exe:
         os.startfile(url)
         return None
     profile = CONFIG_DIR / "browser-profile"
-    # Center the phone-shaped app window in the usable desktop area, above the taskbar.
-    bounds = (0, 0, 1280, 900)
+    # Center on the primary work area, or restore the last location on any connected monitor.
+    work_areas = [(0, 0, 1280, 900)]
     scale = 1.0
     try:
-        from ctypes import wintypes
-        rect = wintypes.RECT()
-        ctypes.windll.user32.SystemParametersInfoW(0x30, 0, ctypes.byref(rect), 0)  # SPI_GETWORKAREA
-        bounds = (rect.left, rect.top, rect.right, rect.bottom)
+        work_areas = window_position.monitor_work_areas()
         scale = ctypes.windll.shcore.GetScaleFactorForDevice(0) / 100 or 1
     except Exception:
         pass
-    w, h, x, y = _centered_window_bounds(bounds, scale)
+    if not work_areas:
+        work_areas = [(0, 0, 1280, 900)]
+    saved_position = window_position.load_position(APP_WINDOW_POSITION)
+    w, h, x, y = _app_window_bounds(work_areas, scale, saved_position)
     # A dedicated profile means this process owns the window: it exits when the window closes.
     extra = []
     if os.environ.get("IDESKTOP_DEVTOOLS"):  # debugging only: tools/cdp.py talks to this port
@@ -242,6 +306,7 @@ def run_native(udid: str, transport: list[str], wda_bundle: str | None, wifi_hos
             stream.wait()
             return True
         while win.poll() is None:
+            _save_browser_window_position(win.pid)
             time.sleep(1)
             if stream.poll() is None:
                 continue
@@ -252,6 +317,7 @@ def run_native(udid: str, transport: list[str], wda_bundle: str | None, wifi_hos
                 flag = CONFIG_DIR / RECONNECT_FLAG
                 flag.unlink(missing_ok=True)
                 while win.poll() is None and not flag.exists():
+                    _save_browser_window_position(win.pid)
                     time.sleep(0.5)
                 flag.unlink(missing_ok=True)
                 if win.poll() is not None:
@@ -259,6 +325,7 @@ def run_native(udid: str, transport: list[str], wda_bundle: str | None, wifi_hos
             log(f"Lost the phone (stream exit code {stream.returncode}); reconnecting...")
             nxt = None
             while win.poll() is None and nxt is None:
+                _save_browser_window_position(win.pid)
                 try:
                     nxt = retarget() if retarget else (transport, wifi_host)
                 except Exception as e:

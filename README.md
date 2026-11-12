@@ -39,10 +39,10 @@ application dependencies are included for offline installation.
 ## What's added and improved
 
 - Branded Windows installer with embedded artwork, purple progress, shortcuts, and uninstall.
-- Start Menu and desktop shortcuts target the root `iDesktop.bat` launcher installed in the app folder.
+- Start Menu and desktop shortcuts launch the app through the windowless Python runtime directly.
 - Startup splash with app preview, live startup log, and rounded progress indicator.
-- Centered, draggable, minimizable startup splash that stays in the normal window stack (no terminal popup).
-- Edge app window opens centered in the usable desktop area.
+- Draggable, minimizable startup splash that remembers its position and recovers when monitors change (no terminal popup).
+- Edge app window remembers its position and recovers when monitors change.
 - Floating mirror stays minimized until you restore it.
 - Landscape wheel scrolling follows the on-screen direction.
 - Clearer issue templates and a detailed troubleshooting guide.

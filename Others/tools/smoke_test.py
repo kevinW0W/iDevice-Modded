@@ -79,6 +79,9 @@ def helpers_import():
     assert app._centered_window_bounds((0, 0, 1920, 1080)) == (468, 900, 726, 90)
     assert app._centered_window_bounds((0, 0, 2880, 1620), scale=1.5) == (468, 900, 726, 90)
     assert app._centered_window_bounds((100, 50, 2020, 1130)) == (468, 900, 826, 140)
+    displays = [(0, 0, 1920, 1040), (1920, 0, 3840, 1040)]
+    assert app._app_window_bounds(displays, 1, (2100, 90)) == (468, 900, 2100, 90)
+    assert app._app_window_bounds(displays, 1, (5000, 900)) == (468, 900, 3372, 140)
     native = __import__("idesktop.native", fromlist=["x"])
     assert (app.RECONNECT_EXIT, app.DISCONNECT_EXIT, app.RECONNECT_FLAG) ==         (native.RECONNECT_EXIT, native.DISCONNECT_EXIT, native.RECONNECT_FLAG)
 
@@ -86,21 +89,21 @@ def helpers_import():
 def root_launcher_wiring():
     repo = ROOT.parent
     launcher = (repo / "iDesktop.bat").read_text(encoding="utf-8")
-    hidden_launcher = (repo / "iDesktop.vbs").read_text(encoding="utf-8")
     nested_launcher = (ROOT / "iDesktop.bat").read_text(encoding="utf-8")
     installer = (ROOT / "installer" / "idesktop.iss").read_text(encoding="utf-8")
     powershell_installer = (ROOT / "install.ps1").read_text(encoding="utf-8")
 
     assert "set \"IDESKTOP_CODE_HOME=%IDESKTOP_HOME%Others\"" in launcher
     assert "-m idesktop.splash %*" in launcher
-    assert 'shell.Run """" & launcher & """", 0, False' in hidden_launcher
     assert 'call "%~dp0..\\iDesktop.bat" %*' in nested_launcher
     assert 'Source: "{#ProjectRoot}\\..\\iDesktop.bat"; DestDir: "{app}"' in installer
-    assert 'Source: "{#ProjectRoot}\\..\\iDesktop.vbs"; DestDir: "{app}"' in installer
-    assert 'Filename: "{sys}\\wscript.exe"; Parameters: """{app}\\iDesktop.vbs"""' in installer
+    assert 'Filename: "{code:GetPythonwExe}"; Parameters: "-m idesktop.splash"' in installer
+    assert "Result := ExpandConstant('{app}\\runtime\\pythonw.exe')" in installer
+    assert "Result := ExpandConstant('{app}\\runtime\\Scripts\\pythonw.exe')" in installer
     assert "$launcher = Join-Path $src '..\\iDesktop.bat'" in powershell_installer
-    assert "$s.TargetPath = Join-Path $env:WINDIR 'System32\\wscript.exe'" in powershell_installer
-    assert "$s.Arguments = '\"' + (Join-Path $App 'iDesktop.vbs') + '\"'" in powershell_installer
+    assert "$s.TargetPath = Join-Path $Venv 'Scripts\\pythonw.exe'" in powershell_installer
+    assert "$s.Arguments = '-m idesktop.splash'" in powershell_installer
+    assert not (repo / "iDesktop.vbs").exists()
 
 
 def installer_uses_fork_branding():
@@ -113,15 +116,30 @@ def installer_uses_fork_branding():
 
 
 def splash_art_renders():
+    from tempfile import TemporaryDirectory
+    from unittest.mock import patch
+
     from PIL import Image
 
+    from idesktop import splash
     from idesktop.splash import _center_position, _draw_pill, _make_laptop_frame
 
     assert _center_position(1920, 1080) == (510, 245)
+    work_areas = [(0, 0, 1920, 1040), (1920, 0, 3840, 1040)]
+    assert splash._clamp_position(2100, 90, work_areas) == (2100, 90)
+    assert splash._clamp_position(5000, 1200, work_areas) == (2940, 450)
+    assert splash._clamp_position(-5000, -5000, work_areas) == (0, 0)
+    with TemporaryDirectory() as temp_dir:
+        position_file = Path(temp_dir) / "splash-position.json"
+        with patch.object(splash, "POSITION_FILE", position_file):
+            assert splash._load_position() is None
+            splash._save_position(2100, 90)
+            assert splash._load_position() == (2100, 90)
     splash_source = (ROOT / "idesktop" / "splash.py").read_text(encoding="utf-8")
     assert 'drag_widget.bind("<B1-Motion>", move_splash)' in splash_source
-    assert "root.overrideredirect(True)" not in splash_source
-    assert 'command=root.iconify' in splash_source
+    assert "root.overrideredirect(True)" in splash_source
+    assert "iDevice Modded" in splash_source
+    assert "minimize_button" in splash_source and "close_button" in splash_source
     assert 'root.attributes("-topmost", True)' not in splash_source
     assert "creationflags=no_window" in splash_source
     preview = Path(__file__).resolve().parents[1] / "assets" / "idesktop-install-preview.png"
