@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.12
+
+### What's Fixed
+
+- Stacked the floating phone's ellipsis, pin, and minimize buttons vertically as indicated, with expanded controls moved below them.
+
 ## 0.1.11
 
 ### What's Fixed

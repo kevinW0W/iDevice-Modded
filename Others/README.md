@@ -92,7 +92,7 @@ The phone then appears on your desktop. From now on, opening iDesktop goes strai
 
 ### Floating controls
 
-The window is kept above other windows when iDesktop starts. Click the pushpin beside **⋯** to toggle always-on-top; your choice is saved for next time. The minus button minimizes. Click **⋯** (or press Ctrl+M) for the other controls, including **Pro Notch: on/off**. Hover over a button in the app for a reminder.
+The floating controls are stacked vertically beside the phone: **⋯**, pushpin, then minimize. The window is kept above other windows when iDesktop starts. Click the pushpin to toggle always-on-top; your choice is saved for next time. The minus button minimizes. Click **⋯** (or press Ctrl+M) for the other controls, including **Pro Notch: on/off**. Hover over a button in the app for a reminder.
 
 | Button | What it does |
 |---|---|

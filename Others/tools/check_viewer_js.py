@@ -25,6 +25,17 @@ cutout_checks = {
     "power button remains visible in landscape": "if (sideways || !(pos >= 0))" not in viewer_layer.BODY_INJECT,
 }
 missing = [name for name, present in cutout_checks.items() if not present]
+floating_control_checks = {
+    "floating controls are vertically stacked": (
+        "const FAB_GAP = 6, FAB_STACK = FAB * 3 + FAB_GAP * 2;"
+        in viewer_layer.BODY_INJECT
+        and "const fabOffsets = floatingButtonOffsets(FAB, FAB_GAP);" in viewer_layer.BODY_INJECT
+    ),
+    "expanded controls start below the stacked buttons": (
+        "Y0 = FAB_STACK + 14" in viewer_layer.BODY_INJECT
+    ),
+}
+missing.extend(name for name, present in floating_control_checks.items() if not present)
 if missing:
     print("viewer cutout wiring missing: " + ", ".join(missing))
     sys.exit(1)
@@ -47,6 +58,29 @@ assert.deepEqual(wheelDeltaToDevice(1, 0, 90), [0, -1]);
 """
 result = subprocess.run(
     ["node", "-e", wheel_helper.group(0) + "\n" + wheel_tests],
+    capture_output=True,
+    text=True,
+)
+if result.returncode:
+    print(result.stderr)
+    sys.exit(1)
+
+offset_helper = re.search(
+    r"  function floatingButtonOffsets\(size, gap\) \{.*?\n  \}",
+    viewer_layer.BODY_INJECT,
+    re.S,
+)
+if not offset_helper:
+    print("floating control position helper is missing")
+    sys.exit(1)
+result = subprocess.run(
+    [
+        "node",
+        "-e",
+        offset_helper.group(0)
+        + "\nconst assert = require('node:assert/strict');"
+        + "\nassert.deepEqual(floatingButtonOffsets(42, 6), [0, 48, 96]);",
+    ],
     capture_output=True,
     text=True,
 )

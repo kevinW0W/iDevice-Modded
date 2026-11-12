@@ -103,6 +103,10 @@ BODY_INJECT = """
   const toast = (m) => { toastEl.textContent = m; toastEl.classList.add('show');
                          clearTimeout(toastT); toastT = setTimeout(() => toastEl.classList.remove('show'), 1600); };
   const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+  function floatingButtonOffsets(size, gap) {
+    const step = size + gap;
+    return [0, step, step * 2];
+  }
   // In-order touch delivery. Upstream fires one fetch per pointer event without waiting, so
   // they race across the browser's few connections (video, audio and clipboard streams hold
   // some open) and a "release" can land before the moves -> iOS sees a tap instead of a drag.
@@ -1238,6 +1242,7 @@ BODY_INJECT = """
     sw = Math.round(sw); sh = Math.round(sh);
     const pw = sw + 2 * E, ph = sh + 2 * E, sr = Math.round(Math.min(sw, sh) * 0.13), R = sr + E;
     const PAD = 4, FAB = 42, PH = 32, PW = 196, CXR = pw + PAD + 14;   // controls column, relative
+    const FAB_GAP = 6, FAB_STACK = FAB * 3 + FAB_GAP * 2;
     if (full) {
       const maxX = innerWidth - (PAD + CXR + FAB + 4), maxY = innerHeight - ph - 2 - below;
       posX = Math.max(0, Math.min(posX, maxX)); posY = Math.max(0, Math.min(posY, maxY));
@@ -1288,7 +1293,7 @@ BODY_INJECT = """
     }
     // Floating controls beside the phone: on the right if they fit on screen, else on the left;
     // a second column when the list is taller than the space below the phone's top.
-    const GAPC = 8, STEP = PH + 4, Y0 = FAB * 2 + 14;
+    const GAPC = 8, STEP = PH + 4, Y0 = FAB_STACK + 14;
     const bottomLimit = (full ? innerHeight : screen.availHeight) - OY - 6;
     const placed = [];
     let y = Y0, col = 0;
@@ -1301,21 +1306,20 @@ BODY_INJECT = """
       y += STEP;
     }
     const cols = placed.length ? col + 1 : 0;
-    const FAB_GAP = 6, FAB_ROW = FAB * 3 + FAB_GAP * 2;
-    const ctlW = Math.max(FAB_ROW, cols * PW + (cols - 1) * GAPC);
+    const ctlW = Math.max(FAB, cols * PW + (cols - 1) * GAPC);
     const rightX = X + CXR, leftX = X - 14 - ctlW;
     const onLeft = full && rightX + ctlW > innerWidth - 4 && leftX >= 4;
     const CX = onLeft ? leftX : rightX;
     Object.assign(extCtl.style, {left: CX + 'px', top: OY + 'px'});
-    const fabX = onLeft ? ctlW - FAB_ROW : 0;
+    const fabX = onLeft ? ctlW - FAB : 0;
     // Small corner radii on purpose: the window region that cuts these out isn't anti-aliased,
     // so large round ends show stair steps; 8-10 px corners look crisp.
-    place(fab, fabX, 0, FAB, FAB, 10);
-    shapes.push({x: CX + fabX, y: OY, w: FAB, h: FAB, r: 10});
-    place(pinFab, fabX + FAB + FAB_GAP, 0, FAB, FAB, 10);
-    shapes.push({x: CX + fabX + FAB + FAB_GAP, y: OY, w: FAB, h: FAB, r: 10});
-    place(minFab, fabX + (FAB + FAB_GAP) * 2, 0, FAB, FAB, 10);
-    shapes.push({x: CX + fabX + (FAB + FAB_GAP) * 2, y: OY, w: FAB, h: FAB, r: 10});
+    const fabOffsets = floatingButtonOffsets(FAB, FAB_GAP);
+    for (const [index, button] of [fab, pinFab, minFab].entries()) {
+      const by = fabOffsets[index];
+      place(button, fabX, by, FAB, FAB, 10);
+      shapes.push({x: CX + fabX, y: OY + by, w: FAB, h: FAB, r: 10});
+    }
     for (const [p, c, py] of placed) {
       const px = onLeft ? ctlW - PW - c * (PW + GAPC) : c * (PW + GAPC);   // column 0 next to the phone
       place(p.el, px, py, PW, PH, 8);
