@@ -26,6 +26,12 @@ _SWP_NOZORDER = 0x0004
 _SWP_NOACTIVATE = 0x0010
 _SWP_FRAMECHANGED = 0x0020
 _SW_MINIMIZE = 6
+_WM_SETICON = 0x0080
+_WM_GETICON = 0x007F
+_ICON_SMALL = 0
+_ICON_BIG = 1
+_IMAGE_ICON = 1
+_LR_LOADFROMFILE = 0x0010
 
 
 def _is_viewer_title(title: str) -> bool:
@@ -210,6 +216,34 @@ def _enable_taskbar_button(root: tk.Tk) -> None:
         raise ctypes.WinError()
 
 
+def _set_taskbar_icons(root: tk.Tk, icon_path: Path) -> None:
+    if os.name != "nt":
+        return
+    hwnd = _toplevel_hwnd(root)
+    user32 = ctypes.windll.user32
+    user32.LoadImageW.argtypes = [
+        wintypes.HINSTANCE, wintypes.LPCWSTR, wintypes.UINT,
+        ctypes.c_int, ctypes.c_int, wintypes.UINT,
+    ]
+    user32.LoadImageW.restype = wintypes.HANDLE
+    user32.SendMessageW.argtypes = [
+        wintypes.HWND, wintypes.UINT, wintypes.WPARAM, ctypes.c_ssize_t,
+    ]
+    user32.SendMessageW.restype = ctypes.c_ssize_t
+    icons = (
+        user32.LoadImageW(None, str(icon_path), _IMAGE_ICON, 32, 32, _LR_LOADFROMFILE),
+        user32.LoadImageW(None, str(icon_path), _IMAGE_ICON, 16, 16, _LR_LOADFROMFILE),
+    )
+    if not all(icons):
+        for icon in icons:
+            if icon:
+                user32.DestroyIcon(icon)
+        raise ctypes.WinError()
+    user32.SendMessageW(hwnd, _WM_SETICON, _ICON_BIG, icons[0])
+    user32.SendMessageW(hwnd, _WM_SETICON, _ICON_SMALL, icons[1])
+    root._taskbar_icons = icons
+
+
 def _minimize_splash(root: tk.Tk) -> None:
     if os.name == "nt":
         ctypes.windll.user32.ShowWindow(_toplevel_hwnd(root), _SW_MINIMIZE)
@@ -244,6 +278,8 @@ def main() -> None:
     root.deiconify()
     root.update_idletasks()
     _enable_taskbar_button(root)
+    if os.name == "nt":
+        _set_taskbar_icons(root, Path(__file__).resolve().parents[1] / "assets" / "idesktop.ico")
 
     panel_x, panel_y, panel_width, panel_height = 54, 35, 792, 520
     canvas = tk.Canvas(root, width=SPLASH_WIDTH, height=SPLASH_HEIGHT,

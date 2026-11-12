@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.11
+
+### What's Fixed
+
+- Set the iDevice app icon directly on the splash window's small and large Windows icon slots so it appears in the taskbar.
+
 ## 0.1.10
 
 ### What's Fixed

@@ -206,6 +206,15 @@ def splash_native_taskbar_minimize():
         assert not style & splash._WS_EX_TOOLWINDOW
         assert not user32.GetWindowLongW(child_hwnd, splash._GWL_EXSTYLE) & splash._WS_EX_APPWINDOW
 
+        icon_path = ROOT / "assets" / "idesktop.ico"
+        splash._set_taskbar_icons(root, icon_path)
+        user32.SendMessageW.argtypes = [
+            wintypes.HWND, wintypes.UINT, wintypes.WPARAM, ctypes.c_ssize_t,
+        ]
+        user32.SendMessageW.restype = ctypes.c_ssize_t
+        assert user32.SendMessageW(top_hwnd, splash._WM_GETICON, splash._ICON_BIG, 0)
+        assert user32.SendMessageW(top_hwnd, splash._WM_GETICON, splash._ICON_SMALL, 0)
+
         splash._minimize_splash(root)
         assert user32.IsIconic(top_hwnd)
         user32.ShowWindow(top_hwnd, 9)

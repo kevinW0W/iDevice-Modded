@@ -73,6 +73,7 @@ jobs:
           ## What's Fixed
           - The splash and Edge mirror remember their last positions and are moved back onto a connected display if monitor layouts change.
           - The startup splash uses custom draggable window chrome with custom minimize and close buttons; its native taskbar button restores it while startup continues.
+          - The iDevice icon is assigned directly to the splash window's small and large Windows icon slots.
           - Start Menu and desktop shortcuts launch the windowless Python runtime directly; the extra VBS launcher has been removed.
           - The floating mirror stays minimized until you restore it; periodic layout updates no longer bring the window back.
           - The Windows installer UI and setup branding use iDevice Modded.
