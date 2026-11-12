@@ -13,7 +13,7 @@ try { for (const s of ['left','right']) if (!localStorage.getItem('tray-'+s)) lo
 <style>
  #brand, #brand-logo { display:none }
  #topbar { min-height:0; padding-top:4px; padding-bottom:4px }
- #stage-wrap { padding:4px 8px; gap:8px }
+ #stage-wrap { position:relative; left:var(--ext-center-shift, 0px); padding:4px 8px; gap:8px }
  #bottom-row { flex-wrap:wrap; justify-content:center; gap:4px }
  #bottom-row .btn { padding:4px 10px; font-size:12px }
  @media (max-width: 900px) { body:not(.ext-more) #left-tray, body:not(.ext-more) #right-tray { display:none } }
@@ -551,6 +551,12 @@ BODY_INJECT = """
 
   // Phone-first sizing: replace the viewer's fit so the device fills the window height
   // (minus our toolbar) at the stream's true aspect ratio, in any window size or rotation.
+  function stageCenterOffset(leftWidth, rightWidth) {
+    return (rightWidth - leftWidth) / 2;
+  }
+  function centeredStageAvailableWidth(viewportWidth, leftWidth, rightWidth, padding) {
+    return Math.max(100, viewportWidth - 2 * Math.max(leftWidth, rightWidth) - padding);
+  }
   window.fitCanvasToViewport = function () {
     // No video yet (e.g. iOS refusing to stream during a call): still draw the floating phone, at
     // the stream's size from the SPS or an iPhone's usual portrait shape, so it isn't just empty.
@@ -562,11 +568,13 @@ BODY_INJECT = """
     const top = big ? 0 : document.getElementById('topbar').getBoundingClientRect().height;
     const bottom = big ? 0 : row.getBoundingClientRect().height;
     const stacked = window.matchMedia('(max-width: 900px)').matches;
-    const trays = stacked ? 0 : ['left-tray', 'right-tray']
-      .map(id => document.getElementById(id)?.getBoundingClientRect().width || 0).reduce((a, b) => a + b, 0);
+    const trayWidths = stacked ? [0, 0] : ['left-tray', 'right-tray']
+      .map(id => document.getElementById(id)?.getBoundingClientRect().width || 0);
+    const stageWrap = document.getElementById('stage-wrap');
+    stageWrap.style.setProperty('--ext-center-shift', stageCenterOffset(...trayWidths) + 'px');
     const vw = document.documentElement.clientWidth, vh = document.documentElement.clientHeight;
     const pad = big ? 0 : 40;
-    const availW = vw - (big ? 0 : trays) - pad;
+    const availW = big ? vw : centeredStageAvailableWidth(vw, ...trayWidths, pad);
     const availH = vh - top - bottom - pad;
     const z = (typeof zoom === 'number' ? zoom : 1);
     const frameExtra = frameOn ? Math.max(10, Math.min(natW, natH) * 0.07) : 0;
@@ -586,6 +594,13 @@ BODY_INJECT = """
     window.fitCanvasToViewport();
     if (lastFrame) { try { window.drawFrame(lastFrame); } catch (e) {} }  // re-render at the new size now
   });
+  if (typeof ResizeObserver === 'function') {
+    const trayObserver = new ResizeObserver(() => window.fitCanvasToViewport());
+    for (const id of ['left-tray', 'right-tray']) {
+      const tray = document.getElementById(id);
+      if (tray) trayObserver.observe(tray);
+    }
+  }
   setTimeout(() => window.fitCanvasToViewport(), 300);
 
   // ---- Floating iPhone. The browser window is clipped (by the helper, winshape.py) to the phone

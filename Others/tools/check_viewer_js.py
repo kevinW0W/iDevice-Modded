@@ -36,6 +36,21 @@ floating_control_checks = {
     ),
 }
 missing.extend(name for name, present in floating_control_checks.items() if not present)
+centering_checks = {
+    "stage shifted to center between unequal panels": (
+        "function stageCenterOffset(leftWidth, rightWidth)" in viewer_layer.BODY_INJECT
+        and "stageWrap.style.setProperty('--ext-center-shift', stageCenterOffset(...trayWidths) + 'px')" in viewer_layer.BODY_INJECT
+    ),
+    "canvas sizing leaves equal clearance around the centered stage": (
+        "function centeredStageAvailableWidth(viewportWidth, leftWidth, rightWidth, padding)" in viewer_layer.BODY_INJECT
+        and "centeredStageAvailableWidth(vw, ...trayWidths, pad)" in viewer_layer.BODY_INJECT
+    ),
+    "panel resizing recalculates stage centering": (
+        "new ResizeObserver(() => window.fitCanvasToViewport())" in viewer_layer.BODY_INJECT
+        and "trayObserver.observe(tray)" in viewer_layer.BODY_INJECT
+    ),
+}
+missing.extend(name for name, present in centering_checks.items() if not present)
 if missing:
     print("viewer cutout wiring missing: " + ", ".join(missing))
     sys.exit(1)
@@ -80,6 +95,35 @@ result = subprocess.run(
         offset_helper.group(0)
         + "\nconst assert = require('node:assert/strict');"
         + "\nassert.deepEqual(floatingButtonOffsets(42, 6), [0, 48, 96]);",
+    ],
+    capture_output=True,
+    text=True,
+)
+if result.returncode:
+    print(result.stderr)
+    sys.exit(1)
+
+centering_helpers = re.search(
+    r"  function stageCenterOffset\(leftWidth, rightWidth\) \{.*?\n  \}"
+    r"\s*function centeredStageAvailableWidth\(viewportWidth, leftWidth, rightWidth, padding\) \{.*?\n  \}",
+    viewer_layer.BODY_INJECT,
+    re.S,
+)
+if not centering_helpers:
+    print("viewer stage-centering helpers are missing")
+    sys.exit(1)
+result = subprocess.run(
+    [
+        "node",
+        "-e",
+        centering_helpers.group(0)
+        + "\nconst assert = require('node:assert/strict');"
+        + "\nassert.equal(stageCenterOffset(300, 100), -100);"
+        + "\nassert.equal(stageCenterOffset(100, 300), 100);"
+        + "\nassert.equal(stageCenterOffset(120, 120), 0);"
+        + "\nassert.equal(centeredStageAvailableWidth(1400, 300, 100, 40), 760);"
+        + "\nassert.equal(centeredStageAvailableWidth(1400, 100, 300, 40), 760);"
+        + "\nassert.equal(centeredStageAvailableWidth(800, 0, 0, 40), 760);",
     ],
     capture_output=True,
     text=True,
