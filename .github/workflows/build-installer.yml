@@ -79,6 +79,7 @@ jobs:
           - The floating mirror stays minimized until you restore it; periodic layout updates no longer bring the window back.
           - The Windows installer UI and setup branding use iDevice Modded.
           - The live mirror remains centered in the viewer when the side panels have different widths, while keeping equal clearance around the phone.
+          - Typing `?` with the live canvas focused sends it to the iPhone instead of opening Help; the shortcut is also disabled in floating view.
 
           ## Features
           - iPhone mirroring and controls over USB or paired Wi-Fi.

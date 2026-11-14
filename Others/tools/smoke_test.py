@@ -64,6 +64,11 @@ def native_patches_apply():
     assert "keyboard" in ss._NAMED_BUTTONS
     html = native.build_html(ss.VIEWER_HTML if isinstance(ss.VIEWER_HTML, bytes) else ss.VIEWER_HTML.encode(), 18091)
     assert b"<title>iDesktop</title>" in html and b"127.0.0.1:18091" in html
+    assert (
+        b"e.key === '?' && !e.ctrlKey && !e.metaKey && !e.altKey && "
+        b"!keyboardCaptureOn() && !document.body.classList.contains('ext-compact')"
+    ) in ss.VIEWER_JS_TEMPLATE
+    assert b"document.getElementById('help-toggle').addEventListener('click'" in ss.VIEWER_JS_TEMPLATE
 
 
 def audio_decoder_opens():

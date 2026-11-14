@@ -456,6 +456,7 @@ def patch_screen_stream(ext_port: int, wda_bundle: str | None = None, wda_port: 
     import asyncio
     from pymobiledevice3.remote.core_device import screen_stream as ss
 
+    ss.VIEWER_JS_TEMPLATE = _patch_viewer_help_shortcut(ss.VIEWER_JS_TEMPLATE)
     global CTL_PORT, MJPEG_PORT
     from .device import free_port
     CTL_PORT = free_port(ext_port + 10)
@@ -576,6 +577,19 @@ def build_html(upstream: bytes, ext_port: int) -> bytes:
             .replace("__MJPEG_PORT__", str(MJPEG_PORT)))
     html = html.replace(b"</body>", body.encode() + b"</body>", 1)
     return html.replace(b"<title>pymobiledevice3 screen</title>", b"<title>iDesktop</title>")
+
+
+def _patch_viewer_help_shortcut(script: bytes) -> bytes:
+    shortcut = b"if (e.key === '?' && !e.ctrlKey && !e.metaKey && !e.altKey) {"
+    disabled_shortcut = (
+        b"if (e.key === '?' && !e.ctrlKey && !e.metaKey && !e.altKey && "
+        b"!keyboardCaptureOn() && !document.body.classList.contains('ext-compact')) {"
+    )
+    if script.count(shortcut) == 1 and disabled_shortcut not in script:
+        return script.replace(shortcut, disabled_shortcut, 1)
+    if script.count(disabled_shortcut) == 1 and shortcut not in script:
+        return script
+    raise RuntimeError("Could not uniquely locate the upstream viewer Help shortcut.")
 
 
 # ---------------------------------------------------------------------------- helper (pinch via WDA)
